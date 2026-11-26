@@ -498,7 +498,7 @@ export default function EditorClient() {
   if (status === 'locked') {
     return (
       <Container className="py-8">
-        <div className="mx-auto max-w-3xl">
+        <div className="w-full">
         <h1 className="text-3xl font-extrabold tracking-tight text-ink">Image editor</h1>
         <Card className="mt-6 p-8 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50" aria-hidden><Lock className="h-7 w-7 text-primary" /></div>
@@ -519,7 +519,7 @@ export default function EditorClient() {
   if (status === 'error') {
     return (
       <Container className="py-8">
-        <div className="mx-auto max-w-3xl">
+        <div className="w-full">
         <h1 className="text-3xl font-extrabold tracking-tight text-ink">Image editor</h1>
         <div className="mt-6">
           <EmptyState
@@ -536,7 +536,7 @@ export default function EditorClient() {
   if (status === 'empty') {
     return (
       <Container className="py-8">
-        <div className="mx-auto max-w-3xl">
+        <div className="w-full">
         <h1 className="text-3xl font-extrabold tracking-tight text-ink">Image editor</h1>
         <p className="mt-2 text-sm text-muted">Draw, crop, resize, rotate and adjust an image — everything runs in your browser.</p>
         <div

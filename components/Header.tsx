@@ -10,6 +10,8 @@ import { Bell, X } from 'lucide-react';
 export function useMe() {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const pathname = usePathname();
+  const firstPath = useRef(true);
   const refresh = useCallback(async () => {
     const m = await fetchMe();
     setMe(m);
@@ -31,6 +33,16 @@ export function useMe() {
       window.removeEventListener('focus', onRefresh);
     };
   }, [refresh]);
+  // The header and the account page fetch /v1/me independently. When
+  // the user navigates (e.g. to /account after a conversion was
+  // refunded), the header must not keep showing the number it fetched
+  // before the refund — re-fetch on every route change so both always
+  // show the same fresh count. The first run is skipped: the mount
+  // fetch above already covered it.
+  useEffect(() => {
+    if (firstPath.current) { firstPath.current = false; return; }
+    void refresh();
+  }, [pathname, refresh]);
   return { me, loaded, refresh };
 }
 

@@ -209,7 +209,7 @@ function PricingInner() {
 
     <p className="mt-6 text-center text-sm text-muted">Manual payments (JazzCash, EasyPaisa, bank, USDT) are approved within 24 hours. Automatic providers activate instantly.</p>
 
-    <section className="mx-auto mt-12 max-w-3xl">
+    <section className="mt-12">
       <h2 className="text-2xl font-extrabold text-ink">Pricing FAQ</h2>
       <div className="mt-4"><Accordion items={[
         { q: 'Can I cancel my subscription?', a: 'Yes. Cancel anytime from your account under Plan and billing. You keep the paid plan until the end of the current period, then move to the free plan.' },

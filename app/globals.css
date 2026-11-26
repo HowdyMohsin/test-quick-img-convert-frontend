@@ -53,6 +53,18 @@ html { scrollbar-width: thin; scrollbar-color: #A5B4FC #EEF2FF; }
   border: 0 !important;
 }
 ::-webkit-scrollbar-corner { background: transparent; }
+/* The format dropdown lists render NO native scrollbar at all. Two
+   rounds of increasingly explicit ::-webkit-scrollbar-button rules
+   (display:none, zero size, transparent background) did not stop headed
+   Chromium from drawing a down-arrow button at the bottom end of this
+   element's scrollbar — the same rules keep the page scrollbar clean,
+   but they are not honoured for this element's scrollbar. A list with
+   no native scrollbar cannot render an arrow in any browser; the list
+   still scrolls with wheel / keyboard / touch, and a fade at the bottom
+   (see Combobox) shows while more formats are below. The page
+   scrollbar above is untouched. */
+.combo-list { scrollbar-width: none; -ms-overflow-style: none; }
+.combo-list::-webkit-scrollbar { display: none; width: 0; height: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

@@ -11,6 +11,7 @@ export function Combobox({ label, placeholder, options, value, onChange, disable
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
+  const [canScrollDown, setCanScrollDown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const selected = options.find((o) => o.value === value) || null;
@@ -36,6 +37,21 @@ export function Combobox({ label, placeholder, options, value, onChange, disable
   const flat = useMemo(() => grouped.flatMap((g) => g.items), [grouped]);
 
   useEffect(() => { if (active >= flat.length) setActive(0); }, [flat.length, active]);
+
+  // The list has no native scrollbar (see .combo-list in globals.css),
+  // so a fade at the bottom is the only cue that more formats are
+  // below. It shows while the list can scroll further down and hides
+  // at the very bottom. The fade element itself is sticky inside the
+  // list, so it adds its own height to the scrollable remainder — the
+  // threshold subtracts it, otherwise the fade would never hide.
+  const updateScrollFade = () => {
+    const el = listRef.current;
+    if (!el) { setCanScrollDown(false); return; }
+    const fade = el.querySelector('[data-combo-fade]') as HTMLElement | null;
+    const fadeH = fade ? fade.offsetHeight : 0;
+    setCanScrollDown(el.scrollHeight - el.scrollTop - el.clientHeight > fadeH + 4);
+  };
+  useEffect(() => { if (open) updateScrollFade(); }, [open, filtered]);
 
   const choose = (v: string) => { onChange(v); setOpen(false); setQuery(''); inputRef.current?.blur(); };
 
@@ -77,8 +93,8 @@ export function Combobox({ label, placeholder, options, value, onChange, disable
     </div>
     {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
     {open && !isDisabled && (
-      <ul ref={listRef} id={`${id}-list`} role="listbox" aria-label={label}
-        className="absolute z-30 mt-1 max-h-96 w-full overflow-y-auto rounded-card-lg border border-line bg-surface py-1 shadow-card">
+      <ul ref={listRef} id={`${id}-list`} role="listbox" aria-label={label} onScroll={updateScrollFade}
+        className="combo-list absolute z-30 mt-1 max-h-96 w-full overflow-y-auto rounded-card-lg border border-line bg-surface py-1 shadow-card">
         {flat.length === 0 && <li className="px-4 py-3 text-sm text-muted">No formats match “{query}”.</li>}
         {grouped.map((g) => (
           <React.Fragment key={g.category}>
@@ -110,6 +126,9 @@ export function Combobox({ label, placeholder, options, value, onChange, disable
             })}
           </React.Fragment>
         ))}
+        {canScrollDown && (
+          <li aria-hidden data-combo-fade className="pointer-events-none sticky bottom-0 h-10 bg-gradient-to-t from-surface via-surface/85 to-transparent" />
+        )}
       </ul>
     )}
   </div>;

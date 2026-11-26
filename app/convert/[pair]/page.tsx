@@ -98,7 +98,7 @@ export default async function ConvertPage({ params }: { params: { pair: string }
 
       <AdFrame slot="pair_top" />
 
-      <div className="mx-auto mt-4 grid max-w-4xl gap-3 text-center sm:grid-cols-3">
+      <div className="mt-4 grid gap-3 text-center sm:grid-cols-3">
         {['Files auto-delete after 24 hours', 'Secure HTTPS upload', 'Sign in free to convert'].map((t) => (
           <div key={t} className="flex items-center justify-center gap-2 rounded-card border border-line bg-surface px-3 py-2.5 text-sm font-medium text-ink">
             <Check className="h-4 w-4 shrink-0 text-success" aria-hidden /> {t}

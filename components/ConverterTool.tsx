@@ -419,12 +419,23 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   };
 
   const openPreview = (tf: ToolFile) => {
-    if (!isImagePair || !tf.file) return;
-    const url = URL.createObjectURL(tf.file);
-    setPreviewFile({ url, name: tf.name });
+    if (!isImagePair) return;
+    // A file uploaded fresh in this tab has a local blob; a file carried
+    // over from the home page has none — its original comes from the
+    // server's plain upload-file endpoint (no editor plan-gate, unlike
+    // /editor/file, so a free user can preview it too). Without this
+    // fallback the carried file had no Preview button at all.
+    if (tf.file) {
+      const url = URL.createObjectURL(tf.file);
+      setPreviewFile({ url, name: tf.name });
+    } else if (tf.uploadId) {
+      setPreviewFile({ url: `/api/v1/uploads/${tf.uploadId}/file`, name: tf.name });
+    }
   };
   const closePreview = () => {
-    if (previewFile) URL.revokeObjectURL(previewFile.url);
+    // Only blob: URLs were created here — a server URL must never be
+    // passed to revokeObjectURL.
+    if (previewFile && previewFile.url.startsWith('blob:')) URL.revokeObjectURL(previewFile.url);
     setPreviewFile(null);
   };
 
@@ -554,6 +565,10 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       }
       const jobId = job.id || job.job_id || '';
       updateFile(tf.id, { jobId });
+      // The convert call consumed one quota unit, so the header count
+      // is already stale — tell it to re-fetch now, not only when the
+      // job finishes (on a backend with no worker it never finishes).
+      notifyMeChanged();
       // Poll job status. A job that is still queued or converting is NEVER
       // a failure: on a backend with no worker (or a busy one) a job can
       // sit queued indefinitely, so there is no fixed timeout that turns
@@ -607,10 +622,16 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
         }
         if (j.status === 'failed' || j.status === 'error') {
           updateFile(tf.id, { status: 'error', error: j.error_message || 'Conversion failed.', hint: 'Try the file again, or re-export it from the app that created it.' });
+          // The worker refunds the quota when a job fails, so the header
+          // count drops — tell it to re-fetch instead of showing the
+          // pre-failure number while /account shows the refunded one.
+          notifyMeChanged();
           return false;
         }
         if (j.status === 'cancelled') {
           updateFile(tf.id, { status: 'error', error: 'This conversion was cancelled.', hint: 'Try again if you still need it.' });
+          // A cancelled job is refunded too (see cancel_job) — same refresh.
+          notifyMeChanged();
           return false;
         }
         // Still queued / running: keep waiting. The backend returns
@@ -798,7 +819,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       <button onClick={() => openInEditor(f)} aria-label="Edit in image editor" title={editorAllowed ? 'Edit in image editor' : 'Image editor — Basic and Pro only'}
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{editorAllowed ? <Pencil className="h-5 w-5" /> : <Lock className="h-5 w-5" />}</button>
     )}
-    {isImagePair && f.file && (
+    {isImagePair && (f.file || f.uploadId) && (
       <button onClick={() => openPreview(f)} aria-label={`Preview ${displayName(f)}`} title="Preview"
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Eye className="h-5 w-5" /></button>
     )}
@@ -827,7 +848,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
 
   if (disabledPair) {
     return (
-      <div className="mx-auto max-w-4xl">
+      <div className="w-full">
         <Card className="overflow-hidden">
           <div className="px-5 pb-5 pt-6 sm:px-6">
             <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">{from.label} to {to.label} Converter</h1>
@@ -839,17 +860,22 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
     );
   }
 
-  return <div className="mx-auto max-w-4xl">
+  return <div className="w-full">
     {/* Single centered column: one big tool card (title + converter bar
         + drop zone + files + controls + actions). No right sidebar —
         the converter switcher is a horizontal bar at the top of the
         card, and the ad and the small upload box live below the tool. */}
     <Card className="overflow-hidden">
-      <div className="px-5 pb-5 pt-6 sm:px-6">
-        <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">{from.label} to {to.label} Converter</h1>
-        <p className="mt-2 text-sm text-muted">{pairDescription(from, to)}</p>
+      {/* The title/description keep the card padding; the "Change
+          converter" card below spans the tool card's full inner width
+          (1246px = the 1248px content width minus this card's own 1px
+          borders) so the pair tool matches the home tool's 1248px card
+          instead of sitting 25px inset on each side. */}
+      <div className="pb-5 pt-6">
+        <h1 className="px-5 text-2xl font-extrabold tracking-tight text-ink sm:px-6 sm:text-3xl">{from.label} to {to.label} Converter</h1>
+        <p className="mt-2 px-5 text-sm text-muted sm:px-6">{pairDescription(from, to)}</p>
         <div className="mt-5">
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">Change converter</p>
+          <p className="mb-2 px-5 text-xs font-bold uppercase tracking-wide text-muted sm:px-6">Change converter</p>
           <HeroPicker catalog={catalog} layout="bar" initialFrom={from.slug} initialTo={to.slug} lockedFrom={files.length > 0} lockedTo={suspenseLocked} />
         </div>
       </div>
@@ -979,7 +1005,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                     {f.status === 'waiting' && <p className="mt-1 text-xs text-muted">Your file is queued — it will convert when a worker is free.</p>}
                     {f.status === 'error' && <p className="mt-1 text-xs text-danger">{f.error} {f.hint}</p>}
                   </div>
-                  {isImagePair && f.file && (
+                  {isImagePair && (f.file || f.uploadId) && (
                     <>
                       <button onClick={() => openPreview(f)} aria-label={`Preview ${displayName(f)}`} title="Preview"
                         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Eye className="h-5 w-5" /></button>

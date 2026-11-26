@@ -38,8 +38,8 @@ export default async function HomePage() {
         <h1 className="text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">{brand.homeH1}</h1>
         <p className="mt-3 text-lg text-muted">{brand.tagline}</p>
       </div>
-      <div className="mx-auto mt-8 max-w-3xl"><HeroPicker catalog={catalog} showUploadBox /></div>
-      <div className="mx-auto mt-8 grid max-w-4xl gap-3 text-center sm:grid-cols-3">
+      <div className="mt-8"><HeroPicker catalog={catalog} showUploadBox /></div>
+      <div className="mt-8 grid gap-3 text-center sm:grid-cols-3">
         {['Files auto-delete after 24 hours', 'Secure HTTPS upload', 'Sign in free to convert'].map((t) => (
           <div key={t} className="flex items-center justify-center gap-2 rounded-card border border-line bg-surface px-3 py-2.5 text-sm font-medium text-ink">
             <Check className="h-4 w-4 shrink-0 text-success" aria-hidden /> {t}
@@ -84,7 +84,7 @@ export default async function HomePage() {
       </div>
     </Container>
     <Container as="section" className="py-10">
-      <div className="mx-auto max-w-4xl">
+      <div>
       <h2 className="text-2xl font-extrabold text-ink sm:text-3xl">Frequently asked questions</h2>
       <div className="mt-6"><Accordion items={FAQ} /></div>
       </div>
