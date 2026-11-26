@@ -1042,7 +1042,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                       className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X className="h-5 w-5" /></button>
                   ) : (
                     <button onClick={() => removeFile(f.id)} aria-label={`Remove ${displayName(f)}`} title="Remove"
-                      className="flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-danger hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Trash2 className="h-5 w-5" /></button>
+                      className="flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-red-100 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Trash2 className="h-5 w-5" /></button>
                   )}
                 </div>
                 {f.status === 'error' && (

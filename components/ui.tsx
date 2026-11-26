@@ -145,7 +145,7 @@ export function Modal({ open, onClose, title, children, labelledBy }: { open: bo
   return <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/50 p-4 sm:items-center" role="dialog" aria-modal="true" aria-label={title} onClick={onClose}>
     <div ref={ref} className="w-full max-w-lg rounded-card-xl bg-surface p-6 shadow-card" onClick={(e) => e.stopPropagation()}>
       <div className="mb-4 flex items-start justify-between gap-4">
-        <h2 id={labelledBy} className="text-lg font-bold text-ink">{title}</h2>
+        <h2 id={labelledBy} title={title} className="min-w-0 flex-1 truncate text-lg font-bold text-ink">{title}</h2>
         <button onClick={onClose} aria-label="Close dialog" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X className="h-5 w-5" /></button>
       </div>
       {children}

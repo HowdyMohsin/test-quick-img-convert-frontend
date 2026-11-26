@@ -259,7 +259,7 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
                 </div>
                 {f.status === 'ready' && <span className="shrink-0 rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-success">Ready</span>}
                 <button onClick={() => openStagedPreview(f)} aria-label={`Preview ${f.name}`} title="Preview" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Eye className="h-4 w-4" /></button>
-                <button onClick={() => removeStaged(f.id)} aria-label={`Remove ${f.name}`} title="Remove" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-danger hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Trash2 className="h-4 w-4" /></button>
+                <button onClick={() => removeStaged(f.id)} aria-label={`Remove ${f.name}`} title="Remove" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-red-100 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Trash2 className="h-4 w-4" /></button>
               </li>
             ))}
           </ul>
