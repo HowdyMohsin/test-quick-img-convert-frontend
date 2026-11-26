@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { brand } from '@/lib/brand';
 import { apiFetch, fetchMe, fetchNotifications, ME_REFRESH_EVENT, type MeResponse } from '@/lib/api';
 import { Badge, Drawer, Button } from './ui';
-import { Bell, LogOut, X } from 'lucide-react';
+import { Bell, X } from 'lucide-react';
 
 export function useMe() {
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -132,9 +132,6 @@ export function Header({ me, loaded, onSignOut }: { me: MeResponse | null; loade
               className="relative flex h-11 w-11 items-center justify-center rounded-full text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
               <Bell className="h-5 w-5" aria-hidden />
               {unread > 0 && <span className="absolute right-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-[11px] font-bold text-white">{unread}</span>}
-            </button>
-            <button onClick={signOut} disabled={signingOut} className="hidden items-center gap-1.5 rounded-card px-3 py-2 text-sm font-semibold text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 md:inline-flex">
-              <LogOut className="h-4 w-4" aria-hidden /> {signingOut ? 'Signing out…' : 'Sign out'}
             </button>
             <div className="relative">
               <button onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-haspopup="menu" aria-label="Account menu"
