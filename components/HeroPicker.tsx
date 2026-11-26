@@ -10,8 +10,8 @@ import { apiFetch, formatBytes, friendlyErrorMessage } from '@/lib/api';
 
 // The tool converts images (and the other catalog formats) — a .md, .txt
 // or any other unsupported file is rejected with this friendly line, never
-// a raw error code.
-export const UNSUPPORTED_FILE_MESSAGE = 'Ye file type support nahi hai — sirf images, audio, video aur documents convert hote hain.';
+// a raw error code. All tool messages are in English.
+export const UNSUPPORTED_FILE_MESSAGE = 'This file type is not supported.';
 
 function fileExt(name: string): string {
   const dot = name.lastIndexOf('.');
@@ -49,6 +49,10 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
   // shows it — its pair is fixed.
   const [catFilter, setCatFilter] = useState<string>('All');
   const [detectNote, setDetectNote] = useState<string | null>(null);
+  // Notice shown under the drop zone when a file is rejected at selection
+  // (unsupported type): it names the rejected file(s). Rejected files are
+  // never added to the staged list and never uploaded.
+  const [rejectNote, setRejectNote] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [staged, setStaged] = useState<StagedFile[]>([]);
   const detectInputRef = useRef<HTMLInputElement>(null);
@@ -143,27 +147,39 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
   // gets its own row below, with its detected format; the first file that
   // detects a supported format pre-fills the "from" dropdown.
   //
-  // Unsupported files (e.g. .md) are rejected BEFORE any network call —
-  // their row immediately shows the friendly note and keeps its remove
-  // button, while the other files upload normally. A file that the server
-  // still rejects gets its row message from friendlyErrorMessage, so a raw
+  // Unsupported files (e.g. .md, .docx) are rejected BEFORE any network
+  // call — they are never added to the staged list and never uploaded.
+  // Instead a short notice under the drop zone names the rejected file(s),
+  // while the other files upload normally. A file that the server still
+  // rejects gets its row message from friendlyErrorMessage, so a raw
   // "Request failed (403)" can never appear.
   const uploadFiles = async (incoming: File[]) => {
     if (!incoming.length) return;
     setDetectNote(null);
+    setRejectNote(null);
     const now = Date.now();
     const stagedItems: StagedFile[] = [];
     const toUpload: { item: StagedFile; file: File }[] = [];
+    const rejected: string[] = [];
     incoming.forEach((f, i) => {
       const id = `${now}-${i}-${f.name}`;
       if (!supportedExts.has(fileExt(f.name))) {
-        stagedItems.push({ id, name: f.name, size: f.size, detected: '', status: 'error', error: UNSUPPORTED_FILE_MESSAGE, file: f });
+        // Rejected at selection: never staged, never uploaded — only named
+        // in the notice below the drop zone.
+        rejected.push(f.name);
       } else {
         const item: StagedFile = { id, name: f.name, size: f.size, detected: '', status: 'uploading', file: f };
         stagedItems.push(item);
         toUpload.push({ item, file: f });
       }
     });
+    if (rejected.length) {
+      const shown = rejected.slice(0, 3).map((n) => `"${n}"`).join(', ');
+      const more = rejected.length > 3 ? ` and ${rejected.length - 3} more` : '';
+      setRejectNote(rejected.length === 1
+        ? `${shown} — ${UNSUPPORTED_FILE_MESSAGE}`
+        : `${shown}${more} — these file types are not supported.`);
+    }
     setStaged((prev) => [...prev, ...stagedItems]);
     if (!toUpload.length) return;
     const results = await Promise.all(toUpload.map(async ({ item, file }) => {
@@ -266,6 +282,7 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
         )}
         {readyCount > 0 && <p className="mt-2 text-center text-sm font-semibold text-success" role="status">{readyCount} file{readyCount === 1 ? '' : 's'} ready — choose the target format and start converting.</p>}
         {detectNote && <p className="mt-2 text-center text-sm font-semibold text-success" role="status">{detectNote}</p>}
+        {rejectNote && <p className="mt-2 text-center text-sm font-semibold text-danger" role="status">{rejectNote}</p>}
       </div>
     )}
     {layout === 'bar' ? (

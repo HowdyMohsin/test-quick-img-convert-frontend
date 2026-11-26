@@ -15,7 +15,7 @@ export function toArray<T>(v: unknown): T[] {
 // comes through friendlyErrorMessage: the backend's friendly message when it
 // has one, a mapped line for known error codes, and a generic line
 // otherwise. "Request failed (403)" and friends can never leak through.
-const GENERIC_MESSAGE = 'Upload nahi ho saka — dobara try karein.';
+const GENERIC_MESSAGE = 'Upload failed — please try again.';
 const RAW_ERROR_PATTERN = /request failed\s*\(\s*\d{3}\s*\)/i;
 
 function isRawTechnicalMessage(msg: string): boolean {

@@ -6,9 +6,11 @@ import { iconForCategory } from '@/lib/formatIcons';
 
 // The category pill bar (All / Images / Camera RAW / Audio / Video /
 // Documents and vector) — the soft pill container with the active tab
-// highlighted. Shared by the home format-cards section and the home
-// converter tool, so both bars always look and behave the same. The
-// categories and icons come from the catalog, never hard-coded here.
+// highlighted. The container is only as wide as its tabs need
+// (max-content); the search input stays pinned at the right end of the
+// row. Shared by the home format-cards section and the home converter
+// tool, so both bars always look and behave the same. The categories and
+// icons come from the catalog, never hard-coded here.
 // On small screens the pills scroll horizontally in one row instead of
 // wrapping, so the row never overflows the page.
 //
@@ -49,8 +51,8 @@ export function CategoryBar({ value, onChange, disabled = false, search }: { val
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="min-w-0 flex-1 overflow-x-auto rounded-card bg-soft p-1" role="tablist" aria-label="Format categories">
+    <div className="flex items-center justify-between gap-2">
+      <div className="min-w-0 w-max max-w-full overflow-x-auto rounded-card bg-soft p-1" role="tablist" aria-label="Format categories">
         <div className="flex flex-nowrap gap-1">
           {['All', ...CATEGORIES].map((c) => {
             const CatIcon = iconForCategory(c);

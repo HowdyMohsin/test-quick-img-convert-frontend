@@ -192,12 +192,21 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       if (incoming.length > room) {
         setToast(`Your plan allows ${batchLimit} files per batch. Upgrade for larger batches.`);
       }
-      const accepted = incoming.slice(0, Math.max(0, room)).filter((f) => {
+      const inRoom = incoming.slice(0, Math.max(0, room));
+      const accepted = inRoom.filter((f) => {
         const ext = f.name.split('.').pop()?.toLowerCase() || '';
         return from.extensions.includes(ext) || from.aliases.includes(ext);
       });
-      if (accepted.length < incoming.length) {
-        setToast(`Only ${from.label} files can be added here.`);
+      if (accepted.length < inRoom.length) {
+        // Rejected at selection: never added, never uploaded — the toast
+        // names the rejected file(s) so the user knows why nothing appeared.
+        const rejected = inRoom.filter((f) => {
+          const ext = f.name.split('.').pop()?.toLowerCase() || '';
+          return !(from.extensions.includes(ext) || from.aliases.includes(ext));
+        });
+        const shown = rejected.slice(0, 3).map((f) => `"${f.name}"`).join(', ');
+        const more = rejected.length > 3 ? ` and ${rejected.length - 3} more` : '';
+        setToast(`${shown}${more} — this file type is not supported here. Only ${from.label} files can be added.`);
       }
       const mapped: ToolFile[] = accepted.map((f, i) => ({
         id: `${Date.now()}-${i}-${f.name}`, file: f, name: f.name, size: f.size,
