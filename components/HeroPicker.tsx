@@ -73,11 +73,13 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
     } catch { /* ignore */ }
   }, [catalog, layout]);
 
-  const fromOptions = useMemo(() => formatOptions(catalog.formats.filter((f) => catalog.targetsByInput[f.slug]?.length)), [catalog]);
+  // Convert-from rows show the popular targets (JPG → WEBP PNG AVIF);
+  // Convert-to rows keep the plain badge (no targets map passed).
+  const fromOptions = useMemo(() => formatOptions(catalog.formats.filter((f) => catalog.targetsByInput[f.slug]?.length), catalog.targetsByInput), [catalog]);
   const toOptions = useMemo(() => {
     if (!from) return [];
     const targets = catalog.targetsByInput[from] || [];
-    return formatOptions(catalog.formats.filter((f) => targets.includes(f.slug)));
+    return formatOptions(catalog.formats.filter((f) => targets.includes(f.slug)), undefined, catalog.inputsByTarget);
   }, [catalog, from]);
 
   const onFrom = (v: string | null) => {

@@ -9,6 +9,38 @@ import { Suspense } from 'react';
 
 interface Plan { id: string; name: string; price_cents: number; price_yearly_cents: number; limits: any; featured?: number }
 
+// Paddle checkout (client-side Paddle.js). Sandbox mode is selected by the
+// backend when the stored client token is a sandbox ("test_…") token;
+// live tokens open the production checkout. The webhook is the source of
+// truth — a completed payment returns here and the plan activates.
+function loadPaddleJs(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.reject(new Error('Checkout is not available.'));
+  const w = window as any;
+  if (w.Paddle) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Could not load the Paddle checkout — check your connection and try again.'));
+    document.head.appendChild(s);
+  });
+}
+
+async function openPaddleCheckout(res: any, email?: string | null): Promise<void> {
+  await loadPaddleJs();
+  const Paddle = (window as any).Paddle;
+  if (!Paddle) throw new Error('Could not load the Paddle checkout.');
+  Paddle.Environment.set(res.sandbox ? 'sandbox' : 'production');
+  Paddle.Initialize({ token: res.client_token });
+  Paddle.Checkout.open({
+    items: [{ priceId: res.price_id, quantity: 1 }],
+    ...(email ? { customer: { email } } : {}),
+    customData: res.custom_data || {},
+    settings: { successUrl: `${window.location.origin}/pricing?success=1` },
+  });
+}
+
 function PricingInner() {
   const params = useSearchParams();
   const router = useRouter();
@@ -27,12 +59,16 @@ function PricingInner() {
   const [toast, setToast] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [verifyPrompt, setVerifyPrompt] = useState(false);
+  // TEMPORARY (test-only): whether the backend requires email
+  // verification before checkout. Defaults true (verification ON);
+  // the backend sends false only when REQUIRE_EMAIL_VERIFICATION=false.
+  const [requireVerification, setRequireVerification] = useState(true);
 
   useEffect(() => {
     fetchMe().then(setMe);
     fetch('/api/v1/site', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d?.plans) setPlans(d.plans.filter((p: any) => p.active !== false && p.name.toLowerCase() !== 'anonymous')); setLoading(false); })
+      .then((d) => { if (d?.plans) setPlans(d.plans.filter((p: any) => p.active !== false && p.name.toLowerCase() !== 'anonymous')); if (typeof d?.require_email_verification === 'boolean') setRequireVerification(d.require_email_verification); setLoading(false); })
       .catch(() => setLoading(false));
     fetch('/api/v1/payments/config', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
@@ -64,7 +100,11 @@ function PricingInner() {
 
   const startCheckout = (p: Plan) => {
     if (!me?.user) { router.push(`/login?next=/pricing`); return; }
-    if (me.user.email_verified_at == null) { setVerifyPrompt(true); return; }
+    // TEMPORARY (test-only): the "Verify your email first" gate applies
+    // only while the backend requires email verification
+    // (REQUIRE_EMAIL_VERIFICATION=true, the default). When the flag is
+    // off, unverified users check out like everyone else.
+    if (requireVerification && me.user.email_verified_at == null) { setVerifyPrompt(true); return; }
     setPicker(p);
   };
 
@@ -74,7 +114,10 @@ function PricingInner() {
     if (!provider) return;
     try {
       if (provider.flow === 'auto') {
-        const res = await apiFetch<{ checkout_url?: string; url?: string }>('/v1/payments/checkout', { method: 'POST', body: { plan: picker.id, interval, provider: providerKey, coupon: couponInfo?.code } });
+        const res = await apiFetch<any>('/v1/payments/checkout', { method: 'POST', body: { plan: picker.id, interval, provider: providerKey, coupon: couponInfo?.code } });
+        // Paddle opens its own overlay (sandbox when the stored token is
+        // a test token); Stripe / Lemon Squeezy redirect to a hosted URL.
+        if (res.mode === 'paddle_js') { await openPaddleCheckout(res, me?.user?.email); return; }
         const url = res.checkout_url || res.url;
         if (url) window.location.href = url; else setToast('Checkout could not be started.');
       } else if (provider.flow === 'link') {

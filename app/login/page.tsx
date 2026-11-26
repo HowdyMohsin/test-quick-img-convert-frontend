@@ -6,9 +6,45 @@ import { apiFetch, fetchMe } from '@/lib/api';
 import { brand } from '@/lib/brand';
 import { Button, Card, Input, PasswordField, Tabs, Toast } from '@/components/ui';
 import { Captcha } from '@/components/Captcha';
+import { Check } from 'lucide-react';
 
 const LOGIN_TIMEOUT_MS = 90_000;
 const SLOW_LOGIN_MS = 8_000;
+
+// Split-screen auth layout (visual only — no auth logic lives here).
+// Desktop: branded indigo panel on the left, form centred on the right.
+// Mobile: the brand panel hides and the form comes first.
+function AuthLayout({ children }: { children: React.ReactNode }) {
+  const highlights = [
+    '238 conversion pairs — images, RAW, audio, video and PDF',
+    '25 free conversions every day',
+    'Fast, free and private — no watermarks',
+  ];
+  return <div className="mx-auto grid w-full max-w-7xl lg:min-h-[calc(100vh-4rem)] lg:grid-cols-2">
+    <div className="hidden flex-col justify-between bg-gradient-to-br from-[#4F46E5] via-[#4338CA] to-[#1E1B4B] px-10 py-12 text-white lg:flex">
+      <div>
+        <div className="flex items-center gap-3">
+          <img src="/logo-mark.svg" alt="Quick IMG Convert logo" className="h-10 w-10" />
+          <span className="text-xl font-extrabold tracking-tight">Quick IMG Convert</span>
+        </div>
+        <h2 className="mt-14 text-4xl font-extrabold leading-tight">238 formats.<br />One converter.</h2>
+        <p className="mt-3 max-w-md text-base text-indigo-100">Convert images, RAW, audio, video and PDF — fast, free and private.</p>
+        <ul className="mt-8 space-y-4">
+          {highlights.map((h) => (
+            <li key={h} className="flex items-start gap-3 text-sm font-medium text-indigo-50">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20"><Check className="h-3.5 w-3.5" aria-hidden /></span>
+              {h}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p className="text-sm text-indigo-200">Free forever — upgrade only when you need more.</p>
+    </div>
+    <div className="flex items-center justify-center px-4 py-10 sm:py-14">
+      <div className="w-full max-w-md">{children}</div>
+    </div>
+  </div>;
+}
 
 function LoginInner() {
   const params = useSearchParams();
@@ -129,7 +165,16 @@ function LoginInner() {
             console.warn('[captcha] verify endpoint unavailable, continuing in test mode:', err);
           }
         }
-        await apiFetch('/v1/auth/register', { method: 'POST', body: { name: name.trim(), email: email.trim(), password, terms_accepted: terms, remember_me: remember } });
+        const res = await apiFetch<{ require_email_verification?: boolean }>('/v1/auth/register', { method: 'POST', body: { name: name.trim(), email: email.trim(), password, terms_accepted: terms, remember_me: remember } });
+        // TEMPORARY (test-only): when the backend has email verification
+        // switched off (REQUIRE_EMAIL_VERIFICATION=false), registration
+        // lands straight on the account — no OTP screen, no verification
+        // prompt. The OTP screen stays for the default (verification on).
+        if (res?.require_email_verification === false) {
+          router.push('/account');
+          router.refresh();
+          return;
+        }
         setRegistered(true);
         setResendCooldown(60);
       } else {
@@ -188,18 +233,18 @@ function LoginInner() {
 
   if (registered) {
     if (otpVerified) {
-      return <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <Card className="p-8">
+      return <AuthLayout>
+        <div className="text-center"><Card className="p-8">
           <h1 className="text-2xl font-extrabold text-ink">Email verified</h1>
           <p className="mt-2 text-sm text-muted">Your email <strong className="text-ink">{email}</strong> is verified. Payments and higher limits are unlocked.</p>
           <div className="mt-6 flex flex-col gap-2">
             <Button onClick={() => router.push('/account')}>Go to my account</Button>
           </div>
-        </Card>
-      </div>;
+        </Card></div>
+      </AuthLayout>;
     }
-    return <div className="mx-auto max-w-md px-4 py-16 text-center">
-      <Card className="p-8">
+    return <AuthLayout>
+      <div className="text-center"><Card className="p-8">
         <h1 className="text-2xl font-extrabold text-ink">Enter the 6-digit code</h1>
         <p className="mt-2 text-sm text-muted">We sent a 6-digit verification code to <strong className="text-ink">{email}</strong>. Enter it below to verify your email.</p>
         <form onSubmit={verifyOtp} className="mt-6 space-y-4 text-left" noValidate>
@@ -213,12 +258,12 @@ function LoginInner() {
           <Button variant="secondary" disabled={resendCooldown > 0} onClick={resend}>{resendCooldown > 0 ? `Resend link in ${resendCooldown}s` : 'Resend verification email'}</Button>
           <Button variant="ghost" onClick={() => router.push('/account')}>Go to my account</Button>
         </div>
-      </Card>
+      </Card></div>
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
-    </div>;
+    </AuthLayout>;
   }
 
-  return <div className="mx-auto max-w-md px-4 py-12">
+  return <AuthLayout>
     <Card className="p-6 sm:p-8">
       <h1 className="text-center text-2xl font-extrabold text-ink">{tab === 'register' ? 'Create your account' : 'Welcome back'}</h1>
       <p className="mt-1 text-center text-sm text-muted">{tab === 'register' ? 'Free forever — 25 conversions a day.' : `Sign in to ${brand.name}.`}</p>
@@ -252,7 +297,7 @@ function LoginInner() {
       </form>
     </Card>
     {toast && <Toast message={toast} onClose={() => setToast(null)} />}
-  </div>;
+  </AuthLayout>;
 }
 
 export default function LoginPage() {

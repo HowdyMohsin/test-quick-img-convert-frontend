@@ -43,6 +43,11 @@ function AccountInner() {
   const [newEmail, setNewEmail] = useState('');
   const [emailPw, setEmailPw] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
+  // TEMPORARY (test-only): while the backend has email verification off
+  // (REQUIRE_EMAIL_VERIFICATION=false) every verification surface on
+  // this page is hidden — badge, resend button, and the verification
+  // step of changing email. Defaults true (verification ON).
+  const [requireVerification, setRequireVerification] = useState(true);
 
   const load = async () => {
     const m = await fetchMe();
@@ -50,6 +55,7 @@ function AccountInner() {
     setMe(m);
     setDisplayName(m.user.display_name || '');
     setLoading(false);
+    apiFetch('/v1/site').then((d: any) => { if (typeof d?.require_email_verification === 'boolean') setRequireVerification(d.require_email_verification); }).catch(() => {});
   };
   useEffect(() => { load(); }, []);
   useEffect(() => {
@@ -116,7 +122,7 @@ function AccountInner() {
     catch (e: any) { setToast(e?.message || 'Could not change the password.'); }
   };
   const changeEmail = async () => {
-    try { await apiFetch('/v1/auth/change-email', { method: 'POST', body: { new_email: newEmail, password: emailPw } }); setToast('Verification link sent to your new email address.'); setNewEmail(''); setEmailPw(''); }
+    try { const res: any = await apiFetch('/v1/auth/change-email', { method: 'POST', body: { new_email: newEmail, password: emailPw } }); setToast(res?.message || 'Your email has been changed.'); setNewEmail(''); setEmailPw(''); load(); }
     catch (e: any) { setToast(e?.message || 'Could not change the email.'); }
   };
   const revokeSession = async (id: string) => {
@@ -223,10 +229,10 @@ function AccountInner() {
               <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-2xl font-bold text-white">{(user.display_name || user.email)[0].toUpperCase()}</span>
               <div className="min-w-0 flex-1">
                 <h2 className="text-lg font-bold text-ink">{user.display_name || 'Account'}</h2>
-                <p className="truncate text-sm text-muted">{user.email} {user.email_verified_at ? <Badge tone="success">Verified</Badge> : <Badge tone="warn">Not verified</Badge>}</p>
+                <p className="truncate text-sm text-muted">{user.email} {requireVerification && (user.email_verified_at ? <Badge tone="success">Verified</Badge> : <Badge tone="warn">Not verified</Badge>)}</p>
                 <p className="text-xs text-muted">Member since {new Date(user.created_at).toLocaleDateString()}</p>
               </div>
-              {!user.email_verified_at && <Button variant="secondary" disabled={resendCooldown > 0} onClick={resendVerification}>{resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend verification'}</Button>}
+              {requireVerification && !user.email_verified_at && <Button variant="secondary" disabled={resendCooldown > 0} onClick={resendVerification}>{resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend verification'}</Button>}
             </Card>
             <Card className="p-6">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -376,8 +382,8 @@ function AccountInner() {
               <div className="mt-3 space-y-3">
                 <Input label="New email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
                 <PasswordField label="Current password" id="email-change-password" value={emailPw} onChange={(e) => setEmailPw(e.target.value)} />
-                <Button onClick={changeEmail} disabled={!newEmail || !emailPw}>Send verification to new email</Button>
-                <p className="text-xs text-muted">Your email only changes after you click the link sent to the new address.</p>
+                <Button onClick={changeEmail} disabled={!newEmail || !emailPw}>{requireVerification ? 'Send verification to new email' : 'Change email'}</Button>
+                <p className="text-xs text-muted">{requireVerification ? 'Your email only changes after you click the link sent to the new address.' : 'Your email changes immediately.'}</p>
               </div>
             </Card>
             <Card className="p-6">

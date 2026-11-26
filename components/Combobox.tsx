@@ -1,10 +1,10 @@
 'use client';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, Lock } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronDown, Lock } from 'lucide-react';
 import type { FormatInfo } from '@/lib/catalog';
-import { CATEGORIES } from '@/lib/catalog';
+import { CATEGORIES, popularSources, popularTargets } from '@/lib/catalog';
 
-export interface ComboOption { value: string; label: string; category: string; badge: string }
+export interface ComboOption { value: string; label: string; category: string; badge: string; targets?: string[]; sources?: string[] }
 
 export function Combobox({ label, placeholder, options, value, onChange, disabled, locked, id, hint }:
   { label: string; placeholder: string; options: ComboOption[]; value: string | null; onChange: (v: string | null) => void; disabled?: boolean; locked?: boolean; id: string; hint?: string }) {
@@ -18,7 +18,7 @@ export function Combobox({ label, placeholder, options, value, onChange, disable
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return options;
-    return options.filter((o) => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q) || o.badge.toLowerCase().includes(q));
+    return options.filter((o) => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q) || o.badge.toLowerCase().includes(q) || (o.targets || []).some((t) => t.toLowerCase().includes(q)) || (o.sources || []).some((t) => t.toLowerCase().includes(q)));
   }, [options, query]);
 
   const grouped = useMemo(() => {
@@ -78,7 +78,7 @@ export function Combobox({ label, placeholder, options, value, onChange, disable
     {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
     {open && !isDisabled && (
       <ul ref={listRef} id={`${id}-list`} role="listbox" aria-label={label}
-        className="absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-card-lg border border-line bg-surface py-1 shadow-card">
+        className="absolute z-30 mt-1 max-h-96 w-full overflow-y-auto rounded-card-lg border border-line bg-surface py-1 shadow-card">
         {flat.length === 0 && <li className="px-4 py-3 text-sm text-muted">No formats match “{query}”.</li>}
         {grouped.map((g) => (
           <React.Fragment key={g.category}>
@@ -87,9 +87,25 @@ export function Combobox({ label, placeholder, options, value, onChange, disable
               const idx = flat.indexOf(o);
               return <li key={o.value} id={`${id}-opt-${o.value}`} role="option" aria-selected={value === o.value}
                 onMouseDown={(e) => { e.preventDefault(); choose(o.value); }}
-                className={`flex cursor-pointer items-center justify-between px-4 py-2.5 text-sm ${idx === active ? 'bg-indigo-50 text-ink' : 'text-ink'} ${value === o.value ? 'font-bold' : ''}`}>
-                <span>{o.label}</span>
-                <span className="rounded bg-soft px-2 py-0.5 text-xs font-semibold text-muted">{o.badge}</span>
+                className={`flex cursor-pointer items-center justify-between gap-2 px-4 py-2.5 text-sm ${idx === active ? 'bg-indigo-50 text-ink' : 'text-ink'} ${value === o.value ? 'font-bold' : ''}`}>
+                <span className="min-w-0 truncate">{o.label}</span>
+                {o.targets?.length ? (
+                  <span className="flex shrink-0 items-center gap-1" title={`Converts to ${o.targets.map((t) => t.toUpperCase()).join(', ')}`}>
+                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
+                    {o.targets.map((t) => (
+                      <span key={t} className="rounded bg-soft px-1.5 py-0.5 text-[11px] font-semibold text-muted">{t.toUpperCase()}</span>
+                    ))}
+                  </span>
+                ) : o.sources?.length ? (
+                  <span className="flex shrink-0 items-center gap-1" title={`Convertible from ${o.sources.map((t) => t.toUpperCase()).join(', ')}`}>
+                    <ArrowLeft className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
+                    {o.sources.map((t) => (
+                      <span key={t} className="rounded bg-soft px-1.5 py-0.5 text-[11px] font-semibold text-muted">{t.toUpperCase()}</span>
+                    ))}
+                  </span>
+                ) : (
+                  <span className="shrink-0 rounded bg-soft px-2 py-0.5 text-xs font-semibold text-muted">{o.badge}</span>
+                )}
               </li>;
             })}
           </React.Fragment>
@@ -99,6 +115,13 @@ export function Combobox({ label, placeholder, options, value, onChange, disable
   </div>;
 }
 
-export function formatOptions(formats: FormatInfo[]): ComboOption[] {
-  return formats.map((f) => ({ value: f.slug, label: f.label, category: f.category, badge: f.slug.toUpperCase() }));
+export function formatOptions(formats: FormatInfo[], targetsByInput?: Record<string, string[]>, inputsByTarget?: Record<string, string[]>): ComboOption[] {
+  return formats.map((f) => ({
+    value: f.slug, label: f.label, category: f.category, badge: f.slug.toUpperCase(),
+    // Convert-from rows show the popular targets (JPG → WEBP PNG AVIF);
+    // Convert-to rows show the popular sources (AVIF ← WEBP PNG JPG).
+    // Rows with neither map keep the plain badge.
+    ...(targetsByInput ? { targets: popularTargets(f.slug, targetsByInput) } : {}),
+    ...(inputsByTarget ? { sources: popularSources(f.slug, inputsByTarget) } : {}),
+  }));
 }

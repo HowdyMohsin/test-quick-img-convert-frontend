@@ -103,7 +103,7 @@ export function Header({ me, loaded, onSignOut }: { me: MeResponse | null; loade
   return <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur">
     <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4">
       <Link href="/" className="flex shrink-0 items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
-        <img src={brand.logo} alt={`${brand.name} logo`} className="h-8 w-auto" />
+        <img src={brand.logo} alt={`${brand.name} logo`} className="h-8 w-auto shrink-0" />
       </Link>
       <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
         <Link href="/#formats" className="rounded-lg px-3 py-2 text-sm font-semibold text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Converters</Link>

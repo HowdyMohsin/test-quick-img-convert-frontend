@@ -56,6 +56,36 @@ function buildCatalog(): Catalog {
 export const localCatalog: Catalog = buildCatalog();
 export const pairCount = localCatalog.pairs.length; // computed, never hard-coded
 export const formatBySlug = (slug: string) => localCatalog.formats.find((f) => f.slug === slug);
+// Popular conversion targets, most common first. The Convert-from
+// dropdown shows these as tags (e.g. JPG → WEBP PNG AVIF) — only targets
+// that really exist for that source in the pair matrix, at most 4.
+const POPULAR_TARGETS = [
+  'webp', 'png', 'jpg', 'avif', 'gif', 'pdf', 'mp4', 'mp3', 'svg',
+  'tiff', 'bmp', 'ico', 'wav', 'mov', 'mkv', 'jpeg', 'doc', 'docx',
+];
+export function popularTargets(
+  from: string,
+  targetsByInput: Record<string, string[]> = localCatalog.targetsByInput,
+  max = 4,
+): string[] {
+  const real = targetsByInput[from] || [];
+  const ranked = [...POPULAR_TARGETS.filter((t) => real.includes(t)),
+    ...real.filter((t) => !POPULAR_TARGETS.includes(t))];
+  return ranked.slice(0, max);
+}
+
+// Mirror of popularTargets for the other direction: the popular SOURCE
+// formats that can convert TO this target (AVIF ← WEBP PNG JPG GIF).
+export function popularSources(
+  to: string,
+  inputsByTarget: Record<string, string[]> = localCatalog.inputsByTarget,
+  max = 4,
+): string[] {
+  const real = inputsByTarget[to] || [];
+  const ranked = [...POPULAR_TARGETS.filter((t) => real.includes(t)),
+    ...real.filter((t) => !POPULAR_TARGETS.includes(t))];
+  return ranked.slice(0, max);
+}
 export const resolveAlias = (s: string) => {
   const lower = s.toLowerCase();
   const direct = localCatalog.formats.find((f) => f.slug === lower);

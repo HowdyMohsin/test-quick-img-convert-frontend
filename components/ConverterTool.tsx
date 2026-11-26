@@ -37,6 +37,7 @@ const PRESETS: Record<string, { label: string; apply: (f: ToolFile) => Partial<T
 export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from: FormatInfo; to: FormatInfo; catalog: Catalog; usage?: { used: number; limit: number } | null; disabledPair?: boolean }) {
   const [files, setFiles] = useState<ToolFile[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  const [dragOverSide, setDragOverSide] = useState(false);
   const [running, setRunning] = useState(false);
   const [doneCount, setDoneCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
@@ -406,14 +407,35 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
 
   return <div>
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-    <Card className="overflow-hidden">
-      {files.length === 0 && (
-        <div className="px-5 pb-5">
-          <EmptyState title="No files yet" body={`Add ${from.label} files to convert them to ${to.label}.`} action={<Button variant="secondary" onClick={trySample}>Try with a sample file</Button>} />
+    <div className="min-w-0 space-y-4">
+      {/* Hero drop zone — the tool's front door. Always visible: large
+          when empty, a compact strip once files are staged. The sidebar
+          keeps its own small upload box (same input, same handler), and
+          the pair_sidebar ad stays below it. */}
+      <Card className="overflow-hidden">
+        <div
+          role="button" tabIndex={0} aria-label={`Drop ${from.label} files here, or press Enter to browse`}
+          onClick={() => inputRef.current?.click()}
+          onKeyDown={(e) => { if (e.key === 'Enter') inputRef.current?.click(); }}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
+          className={`flex cursor-pointer flex-col items-center justify-center gap-1.5 border-b-2 border-dashed px-4 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${files.length === 0 ? 'py-10 sm:py-14' : 'py-5'} ${dragOver ? 'border-primary bg-indigo-50' : 'border-line bg-gradient-to-b from-indigo-50/60 to-surface hover:border-primary/50'}`}>
+          <span className={`flex items-center justify-center rounded-full bg-primary text-white ${files.length === 0 ? 'h-14 w-14' : 'h-10 w-10'}`}><Upload className={files.length === 0 ? 'h-7 w-7' : 'h-5 w-5'} aria-hidden /></span>
+          <p className="text-base font-extrabold text-ink sm:text-lg">Drop your {from.label} files here</p>
+          <p className="text-sm text-muted">or <span className="font-semibold text-primary underline">browse your files</span> — {from.label} to {to.label} in seconds</p>
+          <p className="text-xs text-muted">Accepted: {acceptExts}</p>
+          <input ref={inputRef} type="file" accept={acceptExts} multiple className="hidden" aria-hidden
+            onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} />
         </div>
-      )}
+        <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-xs text-muted">
+          <span>Up to {batchLimit} files · {from.category === 'Video' ? '500 MB' : from.category === 'Audio' ? '100 MB' : '200 MB'} each · {remaining} left today</span>
+          {files.length === 0 && <Button variant="secondary" onClick={trySample}>Try with a sample file</Button>}
+        </div>
+      </Card>
 
       {files.length > 0 && (
+        <Card className="overflow-hidden">
         <div className="px-5 py-4">
           <div className="mb-3 flex flex-wrap items-center gap-2" aria-label="Batch presets">
             <span className="text-xs font-semibold text-muted">Presets:</span>
@@ -554,26 +576,28 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
             </div>
           )}
         </div>
-      )}
-
-      {showCompare && doneFiles > 0 && from.category === 'Images' && (
-        <div className="px-5 pb-5"><CompareSlider beforeLabel={`${from.label} original`} afterLabel={`${to.label} result`} /></div>
+        {showCompare && doneFiles > 0 && from.category === 'Images' && (
+          <div className="px-5 pb-5"><CompareSlider beforeLabel={`${from.label} original`} afterLabel={`${to.label} result`} /></div>
+        )}
+        </Card>
       )}
 
       {history.length > 0 && (
-        <div className="border-t border-line px-5 py-4">
-          <h3 className="text-sm font-bold text-ink">Your recent conversions</h3>
-          <ul className="mt-2 space-y-1 text-sm">
-            {history.map((h: any, i: number) => (
-              <li key={h.id || i} className="flex items-center justify-between gap-2">
-                <span className="text-muted">{h.pair_slug || h.pair || ''} · {h.status || ''}</span>
-                {h.id && (h.status === 'done' || h.status === 'completed') && <a href={`/api/v1/jobs/${h.id}/download`} className="font-semibold text-primary">Re-download</a>}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <Card className="overflow-hidden">
+          <div className="px-5 py-4">
+            <h3 className="text-sm font-bold text-ink">Your recent conversions</h3>
+            <ul className="mt-2 space-y-1 text-sm">
+              {history.map((h: any, i: number) => (
+                <li key={h.id || i} className="flex items-center justify-between gap-2">
+                  <span className="text-muted">{h.pair_slug || h.pair || ''} · {h.status || ''}</span>
+                  {h.id && (h.status === 'done' || h.status === 'completed') && <a href={`/api/v1/jobs/${h.id}/download`} className="font-semibold text-primary">Re-download</a>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Card>
       )}
-    </Card>
+    </div>
     <aside className="space-y-4" aria-label="Change converter, upload and advertisement">
       <div>
         <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">Change converter</p>
@@ -584,10 +608,10 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
           role="button" tabIndex={0} aria-label={`Drop ${from.label} files here, or press Enter to browse`}
           onClick={() => inputRef.current?.click()}
           onKeyDown={(e) => { if (e.key === 'Enter') inputRef.current?.click(); }}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
-          className={`flex cursor-pointer flex-col items-center justify-center gap-1 border-2 border-dashed px-4 py-6 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${dragOver ? 'border-primary bg-indigo-50 shadow-[0_0_0_4px_rgba(79,70,229,.15)]' : 'border-line bg-soft/40 hover:border-primary/50'}`}>
+          onDragOver={(e) => { e.preventDefault(); setDragOverSide(true); }}
+          onDragLeave={() => setDragOverSide(false)}
+          onDrop={(e) => { e.preventDefault(); setDragOverSide(false); addFiles(e.dataTransfer.files); }}
+          className={`flex cursor-pointer flex-col items-center justify-center gap-1 border-2 border-dashed px-4 py-6 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${dragOverSide ? 'border-primary bg-indigo-50 shadow-[0_0_0_4px_rgba(79,70,229,.15)]' : 'border-line bg-soft/40 hover:border-primary/50'}`}>
           <Upload className="h-7 w-7 text-muted" aria-hidden />
           <p className="text-sm font-bold text-ink">Drop files here or browse</p>
           <p className="text-xs text-muted">Accepted: {acceptExts}</p>
