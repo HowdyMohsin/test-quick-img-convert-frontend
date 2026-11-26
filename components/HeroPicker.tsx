@@ -5,7 +5,17 @@ import { ArrowLeftRight, Upload, X } from 'lucide-react';
 import { Combobox, formatOptions } from './Combobox';
 import { FileThumb } from './ui';
 import type { Catalog } from '@/lib/catalog';
-import { apiFetch, formatBytes } from '@/lib/api';
+import { apiFetch, formatBytes, friendlyErrorMessage } from '@/lib/api';
+
+// The tool converts images (and the other catalog formats) — a .md, .txt
+// or any other unsupported file is rejected with this friendly line, never
+// a raw error code.
+export const UNSUPPORTED_FILE_MESSAGE = 'Ye file type support nahi hai — sirf images, audio, video aur documents convert hote hain.';
+
+function fileExt(name: string): string {
+  const dot = name.lastIndexOf('.');
+  return dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
+}
 
 // Files dropped on the home page are uploaded straight away (the backend
 // detects each file's format) and handed to the pair page through
@@ -34,10 +44,21 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
   const [from, setFrom] = useState<string | null>(initialFrom);
   const [to, setTo] = useState<string | null>(initialTo);
   const [detectNote, setDetectNote] = useState<string | null>(null);
-  const [detectError, setDetectError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [staged, setStaged] = useState<StagedFile[]>([]);
   const detectInputRef = useRef<HTMLInputElement>(null);
+
+  // Extensions the catalog can actually convert. A format counts only if
+  // it has at least one target — built from the catalog, never hard-coded.
+  const supportedExts = useMemo(() => {
+    const set = new Set<string>();
+    for (const f of catalog.formats) {
+      if (!(catalog.targetsByInput[f.slug]?.length)) continue;
+      set.add(f.slug.toLowerCase());
+      for (const e of [...(f.extensions || []), ...(f.aliases || [])]) set.add(e.toLowerCase());
+    }
+    return set;
+  }, [catalog]);
 
   // Home layout only: restore the last-used pair. The side box always shows
   // the pair of the page it sits on (initialFrom / initialTo).
@@ -95,16 +116,34 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
   // Upload every dropped/selected file (not just the first one). Each file
   // gets its own row below, with its detected format; the first file that
   // detects a supported format pre-fills the "from" dropdown.
+  //
+  // Unsupported files (e.g. .md) are rejected BEFORE any network call —
+  // their row immediately shows the friendly note and keeps its remove
+  // button, while the other files upload normally. A file that the server
+  // still rejects gets its row message from friendlyErrorMessage, so a raw
+  // "Request failed (403)" can never appear.
   const uploadFiles = async (incoming: File[]) => {
     if (!incoming.length) return;
     setDetectNote(null);
-    setDetectError(null);
-    const items: StagedFile[] = incoming.map((f, i) => ({ id: `${Date.now()}-${i}-${f.name}`, name: f.name, size: f.size, detected: '', status: 'uploading' }));
-    setStaged((prev) => [...prev, ...items]);
-    const results = await Promise.all(items.map(async (item, i) => {
+    const now = Date.now();
+    const stagedItems: StagedFile[] = [];
+    const toUpload: { item: StagedFile; file: File }[] = [];
+    incoming.forEach((f, i) => {
+      const id = `${now}-${i}-${f.name}`;
+      if (!supportedExts.has(fileExt(f.name))) {
+        stagedItems.push({ id, name: f.name, size: f.size, detected: '', status: 'error', error: UNSUPPORTED_FILE_MESSAGE });
+      } else {
+        const item: StagedFile = { id, name: f.name, size: f.size, detected: '', status: 'uploading' };
+        stagedItems.push(item);
+        toUpload.push({ item, file: f });
+      }
+    });
+    setStaged((prev) => [...prev, ...stagedItems]);
+    if (!toUpload.length) return;
+    const results = await Promise.all(toUpload.map(async ({ item, file }) => {
       try {
         const form = new FormData();
-        form.append('file', incoming[i]);
+        form.append('file', file);
         const up = await apiFetch<{ id?: string; upload_id?: string; detected_format?: string; format?: string }>('/v1/uploads', { method: 'POST', body: form });
         const detected = String(up.detected_format || up.format || '').toLowerCase();
         const uploadId = up.id || up.upload_id || '';
@@ -115,12 +154,16 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
         });
         return { detected, name: item.name };
       } catch (e: any) {
-        setStaged((prev) => prev.map((f) => (f.id === item.id ? { ...f, status: 'error' as const, error: e?.message || 'Upload failed — please try again.' } : f)));
+        setStaged((prev) => prev.map((f) => (f.id === item.id ? { ...f, status: 'error' as const, error: friendlyErrorMessage(e) } : f)));
         return { detected: '', name: item.name };
       }
     }));
     // Prefill "from" from the first file in this batch that detected a
     // supported format (files may be mixed, so not necessarily the first).
+    // There is no "couldn't detect" banner any more: a file that fails is
+    // already explained by its own row message, and Convert-from is locked
+    // while files are staged, so "pick the format manually" would be
+    // impossible advice.
     const firstGood = results.find((r) => {
       const m = catalog.formats.find((f) => f.slug === r.detected);
       return r.detected && m && (catalog.targetsByInput[r.detected]?.length || 0) > 0;
@@ -129,10 +172,6 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
       const match = catalog.formats.find((f) => f.slug === firstGood.detected)!;
       onFrom(firstGood.detected);
       setDetectNote(`Detected: ${match.label} — now choose the format to convert to`);
-    } else if (results.length === 1) {
-      setDetectError(`We couldn't detect a supported format for “${results[0].name}” — please pick the format manually.`);
-    } else if (results.length > 1) {
-      setDetectError('We couldn’t detect a supported format for these files — please pick the format manually.');
     }
   };
 
@@ -149,7 +188,10 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
   // from the files, so the user cannot change it. Removing every file
   // unlocks it again. The pair-page converter passes lockedFrom when its
   // own file list is non-empty; the home box locks on its staged files.
-  const fromLocked = lockedFrom || staged.length > 0;
+  // Only uploading/ready files lock it: a batch of purely rejected files
+  // (e.g. all .md) leaves it unlocked, so the user can still pick a format
+  // manually for a file that does convert.
+  const fromLocked = lockedFrom || staged.some((f) => f.status !== 'error');
 
   return <div className="rounded-card-xl border border-line bg-surface p-5 shadow-card sm:p-6">
     {showUploadBox && (
@@ -186,7 +228,6 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
         )}
         {readyCount > 0 && <p className="mt-2 text-center text-sm font-semibold text-success" role="status">{readyCount} file{readyCount === 1 ? '' : 's'} ready — choose the target format and start converting.</p>}
         {detectNote && <p className="mt-2 text-center text-sm font-semibold text-success" role="status">{detectNote}</p>}
-        {detectError && <p className="mt-2 text-center text-sm font-semibold text-danger" role="alert">{detectError}</p>}
       </div>
     )}
     {layout === 'side' ? (

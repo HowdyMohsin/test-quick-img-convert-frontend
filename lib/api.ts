@@ -2,11 +2,79 @@
 // (rewritten to the backend); auth cookies are HttpOnly and never read in JS.
 export interface ApiError { code: string; message: string; hint?: string }
 
+// The user must NEVER see a raw technical error. Every message the UI shows
+// comes through friendlyErrorMessage: the backend's friendly message when it
+// has one, a mapped line for known error codes, and a generic line
+// otherwise. "Request failed (403)" and friends can never leak through.
+const GENERIC_MESSAGE = 'Upload nahi ho saka — dobara try karein.';
+const RAW_ERROR_PATTERN = /request failed\s*\(\s*\d{3}\s*\)/i;
+
+function isRawTechnicalMessage(msg: string): boolean {
+  const t = msg.trim();
+  return RAW_ERROR_PATTERN.test(t)
+    || /^failed to fetch$/i.test(t)
+    || /^networkerror/i.test(t)
+    || /^network request failed$/i.test(t)
+    || /^load failed$/i.test(t);
+}
+
+// Friendly lines for error codes whose backend message is technical jargon
+// (e.g. anything mentioning CSRF) or missing. Codes not listed here pass
+// the backend's own message through — it is already written for users.
+const CODE_MESSAGES: Record<string, string> = {
+  unsupported_format: 'This file type is not supported.',
+  file_too_large: 'This file is too large for your plan.',
+  quota_exceeded: 'You have used all your free conversions for today.',
+  csrf_required: 'Something went wrong — please refresh the page and try again.',
+  csrf_invalid: 'Something went wrong — please refresh the page and try again.',
+  account_banned: 'This account is banned. Contact support for help.',
+  not_found: 'That file could not be found — please upload it again.',
+  rate_limited: 'Too many requests — please wait a moment and try again.',
+};
+
+export function friendlyErrorMessage(err: unknown, fallback: string = GENERIC_MESSAGE): string {
+  if (!err) return fallback;
+  const anyErr = err as any;
+  const code = typeof anyErr?.code === 'string' ? anyErr.code : '';
+  const raw = typeof anyErr?.message === 'string' ? anyErr.message : '';
+  // A failed fetch never reaches the server, so there is no backend
+  // message to show.
+  if (anyErr instanceof TypeError || code === 'network_error') {
+    return 'Could not reach the server — check your connection and try again.';
+  }
+  if (code === 'request_failed') return fallback;
+  if (code && CODE_MESSAGES[code]) {
+    // Prefer the backend's own wording when it is already friendly; the
+    // CSRF codes are the exception — their message names the mechanism.
+    if (raw && !isRawTechnicalMessage(raw) && code !== 'csrf_required' && code !== 'csrf_invalid') return raw;
+    return CODE_MESSAGES[code];
+  }
+  if (raw && !isRawTechnicalMessage(raw)) return raw;
+  return fallback;
+}
+
+// One in-flight CSRF fetch is shared by every concurrent caller. The
+// anonymous CSRF secret is minted by the backend when the browser has no
+// qic_csrf_secret cookie yet — two parallel fetches used to mint two
+// different secrets, and only the last Set-Cookie won, so a token from the
+// losing call could mismatch the stored cookie (403 csrf_invalid on the
+// next CSRF-checked mutation). Fetching once per batch removes the race.
+let csrfPromise: Promise<string> | null = null;
 export async function getCsrf(): Promise<string> {
-  const res = await fetch('/api/v1/auth/csrf', { credentials: 'include' });
-  if (!res.ok) return '';
-  const data = await res.json();
-  return data.csrf_token || '';
+  if (!csrfPromise) {
+    const p = (async () => {
+      try {
+        const res = await fetch('/api/v1/auth/csrf', { credentials: 'include' });
+        if (!res.ok) return '';
+        const data = await res.json();
+        return data.csrf_token || '';
+      } catch { return ''; }
+    })();
+    csrfPromise = p;
+    // Clear after settling so the next batch fetches a fresh token.
+    void p.finally(() => { if (csrfPromise === p) csrfPromise = null; });
+  }
+  return csrfPromise;
 }
 
 export async function apiFetch<T>(path: string, init: Omit<RequestInit, 'body'> & { body?: any } = {}): Promise<T> {
@@ -20,13 +88,21 @@ export async function apiFetch<T>(path: string, init: Omit<RequestInit, 'body'> 
   if (method !== 'GET' && method !== 'HEAD') {
     headers['X-CSRF-Token'] = await getCsrf();
   }
-  const res = await fetch(`/api${path}`, { ...init, body, headers, credentials: 'include' });
+  let res: Response;
+  try {
+    res = await fetch(`/api${path}`, { ...init, body, headers, credentials: 'include' });
+  } catch {
+    throw Object.assign(new Error('Could not reach the server — check your connection and try again.'), {
+      code: 'network_error', status: 0,
+    });
+  }
   const text = await res.text();
   let data: any = {};
   try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
   if (!res.ok) {
     const err = data?.error || {};
-    throw Object.assign(new Error(err.message || `Request failed (${res.status})`), {
+    const message = friendlyErrorMessage({ code: err.code || 'request_failed', message: err.message || '' });
+    throw Object.assign(new Error(message), {
       code: err.code || 'request_failed', hint: err.hint, status: res.status,
     });
   }

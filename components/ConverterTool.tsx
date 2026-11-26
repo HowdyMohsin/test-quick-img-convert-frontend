@@ -1,6 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { apiFetch, formatBytes, getCsrf, truncateMiddle } from '@/lib/api';
+import { apiFetch, formatBytes, friendlyErrorMessage, getCsrf, truncateMiddle } from '@/lib/api';
 import type { FormatInfo, Catalog } from '@/lib/catalog';
 import { Button, Card, CompareSlider, EmptyState, FileThumb, Modal, Progress, Switch, Toast, Tooltip } from './ui';
 import { Check, Eye, Lock, Pencil, Upload, X } from 'lucide-react';
@@ -174,7 +174,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       }
       window.open(`/editor?upload=${encodeURIComponent(uploadId)}`, '_blank');
     } catch (e: any) {
-      setToast(e?.message || 'Could not open the image editor — please try again.');
+      setToast(friendlyErrorMessage(e, 'Could not open the image editor — please try again.'));
     }
   };
 
@@ -248,7 +248,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
         setLimitHit(true);
         updateFile(tf.id, { status: 'error', error: 'Daily conversion limit reached.', hint: 'Upgrade your plan or come back tomorrow.' });
       } else {
-        updateFile(tf.id, { status: 'error', error: e?.message || 'Something went wrong.', hint: e?.hint || 'Check your connection and try again.' });
+        updateFile(tf.id, { status: 'error', error: friendlyErrorMessage(e, 'Something went wrong.'), hint: e?.hint || 'Check your connection and try again.' });
       }
     }
   };
@@ -305,7 +305,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 5000);
-    } catch (e: any) { setToast(e?.message || 'Could not create the ZIP. Download files one by one.'); }
+    } catch (e: any) { setToast(friendlyErrorMessage(e, 'Could not create the ZIP. Download files one by one.')); }
   };
 
   const trySample = async () => {
