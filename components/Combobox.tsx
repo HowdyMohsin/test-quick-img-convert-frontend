@@ -59,7 +59,12 @@ export function Combobox({ label, placeholder, options, value, onChange, disable
       <input ref={inputRef} id={id} role="combobox" aria-expanded={open} aria-controls={`${id}-list`} aria-activedescendant={open && flat[active] ? `${id}-opt-${flat[active].value}` : undefined}
         autoComplete="off" disabled={isDisabled} placeholder={placeholder} title={isLocked ? lockTitle : undefined}
         value={open ? query : (selected ? selected.label : '')}
-        onFocus={() => { if (!isDisabled) { setOpen(true); setQuery(selected ? selected.label : ''); } }}
+        // Opening the dropdown must show the FULL list. The query is the
+        // search filter, so it is cleared here — putting the selected label
+        // in it (as before) filtered the list down to just that one format
+        // (e.g. reopening after picking GIF showed only GIF). The input
+        // shows the selected label only while closed (see `value` above).
+        onFocus={() => { if (!isDisabled) { setOpen(true); setQuery(''); } }}
         onChange={(e) => { setQuery(e.target.value); setOpen(true); setActive(0); }}
         onKeyDown={onKeyDown}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
