@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { Catalog } from '@/lib/catalog';
 import { CATEGORIES } from '@/lib/catalog';
+import { iconForCategory, iconForFormat } from '@/lib/formatIcons';
 import { Badge, EmptyState, Skeleton } from './ui';
 
 export function AllFormats({ catalog, loading }: { catalog: Catalog; loading?: boolean }) {
@@ -42,10 +43,15 @@ export function AllFormats({ catalog, loading }: { catalog: Catalog; loading?: b
   return <div>
     <div className="mb-4 flex flex-wrap items-center gap-2">
       <div className="flex flex-wrap gap-1 rounded-card bg-soft p-1" role="tablist" aria-label="Format categories">
-        {['All', ...CATEGORIES].map((c) => (
-          <button key={c} role="tab" aria-selected={tab === c} onClick={() => setTab(c)}
-            className={`min-h-[40px] rounded-lg px-3.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${tab === c ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink'}`}>{c}</button>
-        ))}
+        {['All', ...CATEGORIES].map((c) => {
+          const CatIcon = iconForCategory(c);
+          return (
+            <button key={c} role="tab" aria-selected={tab === c} onClick={() => setTab(c)}
+              className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${tab === c ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink'}`}>
+              <CatIcon className="h-4 w-4 shrink-0" aria-hidden />{c}
+            </button>
+          );
+        })}
       </div>
       <div className="relative ml-auto w-full sm:w-72">
         <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search formats…" aria-label="Search formats"
@@ -70,8 +76,11 @@ export function AllFormats({ catalog, loading }: { catalog: Catalog; loading?: b
           const sources = (catalog.inputsByTarget[f.slug] || []).map((s) => catalog.formats.find((x) => x.slug === s)!).filter(Boolean);
           const shown = expanded[f.slug] ? targets : targets.slice(0, 6);
           return <article key={f.slug} data-format-letter={f.label[0].toUpperCase()} className="rounded-card-lg border border-line bg-surface p-5 shadow-card">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="text-base font-bold text-ink">{f.label}</h3>
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-indigo-50 text-primary" aria-hidden>
+                {(() => { const FormatIcon = iconForFormat(f.slug, f.category); return <FormatIcon className="h-5 w-5" />; })()}
+              </span>
+              <h3 className="min-w-0 flex-1 text-base font-bold text-ink">{f.label}</h3>
               <Badge tone="primary">{f.slug.toUpperCase()}</Badge>
             </div>
             <p className="mt-1 text-sm text-muted">{f.description}</p>

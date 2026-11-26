@@ -5,7 +5,7 @@ import type { FormatInfo, Catalog } from '@/lib/catalog';
 import { Button, Card, CompareSlider, EmptyState, FileThumb, Modal, Progress, Switch, Toast, Tooltip } from './ui';
 import { Check, Eye, Lock, Pencil, Upload, X } from 'lucide-react';
 import { AdFrame, MobileAnchorAd } from './AdFrame';
-import { HeroPicker, HOME_UPLOAD_HANDOFF_KEY, type HomeUploadHandoff } from './HeroPicker';
+import { HeroPicker, HOME_UPLOAD_HANDOFF_KEY, type HomeUploadHandoff, type HomeUploadHandoffPayload } from './HeroPicker';
 
 type FileStatus = 'ready' | 'uploading' | 'converting' | 'done' | 'error';
 interface ToolFile {
@@ -72,17 +72,28 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   }, []);
 
   // Files staged on the home page were already uploaded there and handed
-  // over through sessionStorage — show each as its own row here, with no
-  // re-upload needed. Only files matching this converter are kept.
+  // over through localStorage — show each as its own row here, with no
+  // re-upload needed. Only files matching this converter are kept. The
+  // handoff is consumed once and cleared; a handoff older than 24 hours is
+  // dropped (uploads auto-delete after 24 hours on the server). A plain
+  // array (the old sessionStorage shape) is still accepted.
   const handoffDone = useRef(false);
   useEffect(() => {
     if (handoffDone.current) return;
     handoffDone.current = true;
     let raw: string | null = null;
-    try { raw = sessionStorage.getItem(HOME_UPLOAD_HANDOFF_KEY); sessionStorage.removeItem(HOME_UPLOAD_HANDOFF_KEY); } catch { /* ignore */ }
+    try { raw = localStorage.getItem(HOME_UPLOAD_HANDOFF_KEY); localStorage.removeItem(HOME_UPLOAD_HANDOFF_KEY); } catch { /* ignore */ }
     if (!raw) return;
     let items: HomeUploadHandoff[] = [];
-    try { items = JSON.parse(raw); } catch { return; }
+    try {
+      const parsed = JSON.parse(raw) as HomeUploadHandoffPayload | HomeUploadHandoff[];
+      if (Array.isArray(parsed)) {
+        items = parsed;
+      } else if (parsed && Array.isArray(parsed.items)) {
+        if (typeof parsed.ts === 'number' && Date.now() - parsed.ts > 24 * 60 * 60 * 1000) return;
+        items = parsed.items;
+      } else return;
+    } catch { return; }
     const matching = (Array.isArray(items) ? items : []).filter((it) => {
       if (!it || !it.uploadId || !it.name) return false;
       const ext = it.name.split('.').pop()?.toLowerCase() || '';
@@ -485,7 +496,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
     <aside className="space-y-4" aria-label="Change converter, upload and advertisement">
       <div>
         <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">Change converter</p>
-        <HeroPicker catalog={catalog} layout="side" initialFrom={from.slug} initialTo={to.slug} />
+        <HeroPicker catalog={catalog} layout="side" initialFrom={from.slug} initialTo={to.slug} lockedFrom={files.length > 0} />
       </div>
       <Card className="overflow-hidden">
         <div

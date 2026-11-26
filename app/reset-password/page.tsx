@@ -22,7 +22,8 @@ function ResetInner() {
       await apiFetch('/v1/auth/reset-password', { method: 'POST', body: { token, password } });
       setDone(true);
     } catch (err: any) {
-      if (err?.code === 'token_expired' || err?.code === 'token_invalid') setExpired(true);
+      // Backend raises code "invalid_token" for a missing, used, or expired link.
+      if (err?.code === 'invalid_token') setExpired(true);
       else setError(err?.message || 'Something went wrong.');
     } finally { setLoading(false); }
   };

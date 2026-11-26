@@ -111,6 +111,11 @@ function AccountInner() {
     try { await apiFetch('/v1/payments/cancel', { method: 'POST', body: {} }); setCancelConfirm(false); setToast('Subscription will end at the current period end.'); load(); }
     catch (e: any) { setToast(e?.message || 'Could not cancel the subscription.'); }
   };
+  const signOut = async () => {
+    try { await apiFetch('/v1/auth/logout', { method: 'POST' }); } catch { /* ignore */ }
+    router.push('/');
+    router.refresh();
+  };
 
   if (loading) return <div className="mx-auto max-w-7xl px-4 py-10"><p className="text-muted">Loading your account…</p></div>;
   if (!user) return null;
@@ -121,7 +126,10 @@ function AccountInner() {
   const totalPages = Math.max(1, Math.ceil(filteredHistory.length / pageSize));
 
   return <div className="mx-auto max-w-7xl px-4 py-10">
-    <h1 className="text-3xl font-extrabold text-ink">My account</h1>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h1 className="text-3xl font-extrabold text-ink">My account</h1>
+      <Button variant="secondary" onClick={signOut}>Sign out</Button>
+    </div>
     {me?.grace_banner && <div className="mt-4 rounded-card border border-warn/40 bg-amber-50 p-4 text-sm"><p className="font-bold text-ink">Payment past due</p><p className="mt-1 text-muted">{me.grace_banner}</p></div>}
     <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
       <div className="lg:sticky lg:top-20 lg:self-start">

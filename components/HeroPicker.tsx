@@ -9,10 +9,13 @@ import { apiFetch, formatBytes } from '@/lib/api';
 
 // Files dropped on the home page are uploaded straight away (the backend
 // detects each file's format) and handed to the pair page through
-// sessionStorage, so the converter shows every file as its own row
-// without the user having to upload again.
+// localStorage, so the converter shows every file as its own row without
+// the user having to upload again. localStorage (not sessionStorage) is
+// used on purpose: "Start converting" opens the pair page in a new tab,
+// and sessionStorage does not cross tabs, so the handoff was lost.
 export const HOME_UPLOAD_HANDOFF_KEY = 'qic-home-uploads';
 export interface HomeUploadHandoff { uploadId: string; name: string; size: number; detected: string }
+export interface HomeUploadHandoffPayload { ts: number; items: HomeUploadHandoff[] }
 
 interface StagedFile { id: string; name: string; size: number; detected: string; status: 'uploading' | 'ready' | 'error'; error?: string; uploadId?: string }
 
@@ -26,7 +29,7 @@ function thumbKindFor(catalog: Catalog, slug: string): 'image' | 'audio' | 'vide
   return 'file';
 }
 
-export function HeroPicker({ catalog, showUploadBox = false, layout = 'default', initialFrom = null, initialTo = null }: { catalog: Catalog; showUploadBox?: boolean; layout?: 'default' | 'side'; initialFrom?: string | null; initialTo?: string | null }) {
+export function HeroPicker({ catalog, showUploadBox = false, layout = 'default', initialFrom = null, initialTo = null, lockedFrom = false }: { catalog: Catalog; showUploadBox?: boolean; layout?: 'default' | 'side'; initialFrom?: string | null; initialTo?: string | null; lockedFrom?: boolean }) {
   const router = useRouter();
   const [from, setFrom] = useState<string | null>(initialFrom);
   const [to, setTo] = useState<string | null>(initialTo);
@@ -79,9 +82,12 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
     try {
       const ready = list.filter((f) => f.status === 'ready' && f.uploadId);
       if (ready.length) {
-        sessionStorage.setItem(HOME_UPLOAD_HANDOFF_KEY, JSON.stringify(ready.map((f) => ({ uploadId: f.uploadId as string, name: f.name, size: f.size, detected: f.detected }))));
+        // Timestamped so the pair page can drop a stale handoff (uploads
+        // auto-delete after 24 hours on the server).
+        const payload: HomeUploadHandoffPayload = { ts: Date.now(), items: ready.map((f) => ({ uploadId: f.uploadId as string, name: f.name, size: f.size, detected: f.detected })) };
+        localStorage.setItem(HOME_UPLOAD_HANDOFF_KEY, JSON.stringify(payload));
       } else {
-        sessionStorage.removeItem(HOME_UPLOAD_HANDOFF_KEY);
+        localStorage.removeItem(HOME_UPLOAD_HANDOFF_KEY);
       }
     } catch { /* ignore */ }
   };
@@ -139,6 +145,11 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
   };
 
   const readyCount = staged.filter((f) => f.status === 'ready').length;
+  // The source format is locked while files are uploaded — it is detected
+  // from the files, so the user cannot change it. Removing every file
+  // unlocks it again. The pair-page converter passes lockedFrom when its
+  // own file list is non-empty; the home box locks on its staged files.
+  const fromLocked = lockedFrom || staged.length > 0;
 
   return <div className="rounded-card-xl border border-line bg-surface p-5 shadow-card sm:p-6">
     {showUploadBox && (
@@ -180,7 +191,7 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
     )}
     {layout === 'side' ? (
       <div className="flex flex-col gap-3">
-        <Combobox id="hero-from" label="Convert from" placeholder="Choose a format…" options={fromOptions} value={from} onChange={onFrom} />
+        <Combobox id="hero-from" label="Convert from" placeholder="Choose a format…" options={fromOptions} value={from} onChange={onFrom} locked={fromLocked} />
         <button type="button" onClick={swap} disabled={!reverseExists} aria-label="Swap formats" title={reverseExists ? 'Swap formats' : 'Reverse conversion is not available'}
           className="flex min-h-[40px] w-full items-center justify-center gap-2 rounded-card border border-line bg-surface text-sm font-semibold text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40">
           <ArrowLeftRight className="h-4 w-4" /> Swap
@@ -189,7 +200,7 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
       </div>
     ) : (
       <div className="grid items-end gap-4 sm:grid-cols-[1fr_auto_1fr]">
-        <Combobox id="hero-from" label="Convert from" placeholder="Choose a format…" options={fromOptions} value={from} onChange={onFrom} />
+        <Combobox id="hero-from" label="Convert from" placeholder="Choose a format…" options={fromOptions} value={from} onChange={onFrom} locked={fromLocked} />
         <div className="flex justify-center pb-1">
           <button type="button" onClick={swap} disabled={!reverseExists} aria-label="Swap formats" title={reverseExists ? 'Swap formats' : 'Reverse conversion is not available'}
             className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40">

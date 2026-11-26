@@ -1,13 +1,13 @@
 'use client';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Lock } from 'lucide-react';
 import type { FormatInfo } from '@/lib/catalog';
 import { CATEGORIES } from '@/lib/catalog';
 
 export interface ComboOption { value: string; label: string; category: string; badge: string }
 
-export function Combobox({ label, placeholder, options, value, onChange, disabled, id, hint }:
-  { label: string; placeholder: string; options: ComboOption[]; value: string | null; onChange: (v: string | null) => void; disabled?: boolean; id: string; hint?: string }) {
+export function Combobox({ label, placeholder, options, value, onChange, disabled, locked, id, hint }:
+  { label: string; placeholder: string; options: ComboOption[]; value: string | null; onChange: (v: string | null) => void; disabled?: boolean; locked?: boolean; id: string; hint?: string }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
@@ -46,21 +46,32 @@ export function Combobox({ label, placeholder, options, value, onChange, disable
     else if (e.key === 'Escape') { setOpen(false); setQuery(''); }
   };
 
+  // A locked dropdown cannot be opened or changed (e.g. the source format
+  // is fixed by the files already uploaded). It behaves like disabled, but
+  // shows a lock instead of the chevron so the reason is visible.
+  const isLocked = !!locked;
+  const isDisabled = !!disabled || isLocked;
+  const lockTitle = 'Locked — remove the uploaded files to change the source format';
+
   return <div className="relative w-full">
-    <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-ink">{label}</label>
+    <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-ink">{label}{isLocked && <span className="ml-2 text-xs font-semibold text-muted">(locked)</span>}</label>
     <div className="relative">
       <input ref={inputRef} id={id} role="combobox" aria-expanded={open} aria-controls={`${id}-list`} aria-activedescendant={open && flat[active] ? `${id}-opt-${flat[active].value}` : undefined}
-        autoComplete="off" disabled={disabled} placeholder={placeholder}
+        autoComplete="off" disabled={isDisabled} placeholder={placeholder} title={isLocked ? lockTitle : undefined}
         value={open ? query : (selected ? selected.label : '')}
-        onFocus={() => { if (!disabled) { setOpen(true); setQuery(''); } }}
+        onFocus={() => { if (!isDisabled) { setOpen(true); setQuery(selected ? selected.label : ''); } }}
         onChange={(e) => { setQuery(e.target.value); setOpen(true); setActive(0); }}
         onKeyDown={onKeyDown}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         className="min-h-[48px] w-full rounded-card border border-line bg-surface px-3.5 pr-10 text-sm text-ink placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:bg-soft disabled:text-muted" />
-      <ChevronDown aria-hidden className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+      {isLocked ? (
+        <span title={lockTitle} aria-label={lockTitle} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted"><Lock className="h-5 w-5" aria-hidden /></span>
+      ) : (
+        <ChevronDown aria-hidden className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+      )}
     </div>
     {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
-    {open && !disabled && (
+    {open && !isDisabled && (
       <ul ref={listRef} id={`${id}-list`} role="listbox" aria-label={label}
         className="absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-card-lg border border-line bg-surface py-1 shadow-card">
         {flat.length === 0 && <li className="px-4 py-3 text-sm text-muted">No formats match “{query}”.</li>}

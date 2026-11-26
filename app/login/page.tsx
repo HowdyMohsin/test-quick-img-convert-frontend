@@ -5,6 +5,10 @@ import Link from 'next/link';
 import { apiFetch, fetchMe } from '@/lib/api';
 import { brand } from '@/lib/brand';
 import { Button, Card, Input, PasswordField, Tabs, Toast } from '@/components/ui';
+import { Captcha } from '@/components/Captcha';
+
+const LOGIN_TIMEOUT_MS = 90_000;
+const SLOW_LOGIN_MS = 8_000;
 
 function LoginInner() {
   const params = useSearchParams();
@@ -15,14 +19,23 @@ function LoginInner() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [remember, setRemember] = useState(true);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [remember, setRemember] = useState(false);
   const [terms, setTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [slowLogin, setSlowLogin] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [googleEnabled, setGoogleEnabled] = useState(false);
+  // Captcha (test mode) + email OTP verification.
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
 
   useEffect(() => { setTab(mode); }, [mode]);
   useEffect(() => {
@@ -38,15 +51,49 @@ function LoginInner() {
     return () => clearTimeout(t);
   }, [resendCooldown]);
 
+  // A field's error clears the moment the user changes that field, so a
+  // corrected field never keeps showing its old red message.
+  const clearError = (field: string) => setErrors((prev) => {
+    if (!(field in prev)) return prev;
+    const next = { ...prev };
+    delete next[field];
+    return next;
+  });
+
+  // Validate one field only. Blur validates just the field that was left —
+  // never the whole form, so tabbing through empty fields shows nothing.
+  const fieldError = (field: string): string | undefined => {
+    if (field === 'email') return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? undefined : 'Enter a valid email address.';
+    if (field === 'password') {
+      if (tab === 'register') {
+        if (password.length < 10) return 'Password must be at least 10 characters.';
+        if (password.length > 128) return 'Password must be at most 128 characters.';
+      } else if (!password) return 'Enter your password.';
+      return undefined;
+    }
+    if (field === 'name') return name.trim() ? undefined : 'Enter your name.';
+    if (field === 'confirmPassword') return confirmPassword === password ? undefined : 'Passwords do not match.';
+    if (field === 'terms') return terms ? undefined : 'You must accept the Terms and Privacy Policy.';
+    return undefined;
+  };
+
+  const validateField = (field: string) => {
+    const err = fieldError(field);
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (err) next[field] = err; else delete next[field];
+      return next;
+    });
+    return !err;
+  };
+
+  // Full validation runs only on submit.
   const validate = () => {
+    const fields = tab === 'register'
+      ? ['name', 'email', 'password', 'confirmPassword', 'terms']
+      : ['email', 'password'];
     const e: Record<string, string> = {};
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'Enter a valid email address.';
-    if (tab === 'register') {
-      if (password.length < 10) e.password = 'Password must be at least 10 characters.';
-      if (password.length > 128) e.password = 'Password must be at most 128 characters.';
-      if (!name.trim()) e.name = 'Enter your name.';
-      if (!terms) e.terms = 'You must accept the Terms and Privacy Policy.';
-    } else if (!password) e.password = 'Enter your password.';
+    for (const f of fields) { const err = fieldError(f); if (err) e[f] = err; }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -55,20 +102,51 @@ function LoginInner() {
     ev.preventDefault();
     if (!validate()) return;
     setLoading(true);
+    setSlowLogin(false);
+    const slowTimer = setTimeout(() => setSlowLogin(true), SLOW_LOGIN_MS);
     try {
       if (tab === 'register') {
+        // Captcha: verify the token server-side first. If the verify
+        // endpoint is not deployed yet (or the network fails), test mode
+        // allows registration through and only logs a warning.
+        if (captchaToken) {
+          try {
+            const res = await apiFetch<{ ok?: boolean }>('/v1/captcha/verify', { method: 'POST', body: { token: captchaToken } });
+            if (res && res.ok === false) {
+              setCaptchaResetKey((k) => k + 1);
+              setErrors({ form: 'Captcha verification failed. Please tick the checkbox again.' });
+              return;
+            }
+          } catch (err) {
+            console.warn('[captcha] verify endpoint unavailable, continuing in test mode:', err);
+          }
+        }
         await apiFetch('/v1/auth/register', { method: 'POST', body: { name: name.trim(), email: email.trim(), password, terms_accepted: terms, remember_me: remember } });
         setRegistered(true);
         setResendCooldown(60);
       } else {
-        await apiFetch('/v1/auth/login', { method: 'POST', body: { email: email.trim(), password, remember_me: remember } });
+        // The free backend sleeps when idle and can take up to a minute to
+        // wake up — show that instead of hanging silently, and surface a
+        // proper error if it still has not answered after 90 seconds.
+        const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('LOGIN_TIMEOUT')), LOGIN_TIMEOUT_MS));
+        await Promise.race([
+          apiFetch('/v1/auth/login', { method: 'POST', body: { email: email.trim(), password, remember_me: remember } }),
+          timeout,
+        ]);
         const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/account';
         router.push(safeNext);
         router.refresh();
       }
     } catch (e: any) {
-      setErrors({ form: e?.message || 'Something went wrong. Please try again.' });
-    } finally { setLoading(false); }
+      if (e?.message === 'LOGIN_TIMEOUT') {
+        setErrors({ form: 'The server is taking too long to respond — it may be waking up from sleep. Please try again.' });
+      } else {
+        setErrors({ form: e?.message || 'Something went wrong. Please try again.' });
+      }
+    } finally {
+      clearTimeout(slowTimer);
+      setLoading(false);
+    }
   };
 
   const resend = async () => {
@@ -76,20 +154,59 @@ function LoginInner() {
     catch (e: any) { setToast(e?.message || 'Could not resend the email.'); }
   };
 
+  const verifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^\d{6}$/.test(otpCode.trim())) { setOtpError('Enter the 6-digit code.'); return; }
+    setOtpLoading(true);
+    setOtpError('');
+    try {
+      await apiFetch('/v1/auth/verify-otp', { method: 'POST', body: { email: email.trim(), code: otpCode.trim() } });
+      setOtpVerified(true);
+    } catch (err: any) {
+      setOtpError(err?.message || 'That code did not work. Check it and try again.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const resendOtp = async () => {
+    try { await apiFetch('/v1/auth/resend-otp', { method: 'POST', body: { email: email.trim() } }); setResendCooldown(60); setToast('A new code was sent.'); }
+    catch (err: any) { setToast(err?.message || 'Could not resend the code.'); }
+  };
+
   const googleSignIn = () => {
     setToast('Google sign-in opens in a new window once it is configured.');
   };
 
   if (registered) {
+    if (otpVerified) {
+      return <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <Card className="p-8">
+          <h1 className="text-2xl font-extrabold text-ink">Email verified</h1>
+          <p className="mt-2 text-sm text-muted">Your email <strong className="text-ink">{email}</strong> is verified. Payments and higher limits are unlocked.</p>
+          <div className="mt-6 flex flex-col gap-2">
+            <Button onClick={() => router.push('/account')}>Go to my account</Button>
+          </div>
+        </Card>
+      </div>;
+    }
     return <div className="mx-auto max-w-md px-4 py-16 text-center">
       <Card className="p-8">
-        <h1 className="text-2xl font-extrabold text-ink">Check your inbox</h1>
-        <p className="mt-2 text-sm text-muted">We sent a verification link to <strong className="text-ink">{email}</strong>. You are already signed in — verify your email to unlock payments and higher limits.</p>
+        <h1 className="text-2xl font-extrabold text-ink">Enter the 6-digit code</h1>
+        <p className="mt-2 text-sm text-muted">We sent a 6-digit verification code to <strong className="text-ink">{email}</strong>. Enter it below to verify your email.</p>
+        <form onSubmit={verifyOtp} className="mt-6 space-y-4 text-left" noValidate>
+          <Input label="Verification code" name="code" inputMode="numeric" autoComplete="one-time-code" placeholder="123456" maxLength={6}
+            value={otpCode} onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setOtpError(''); }} error={otpError} />
+          <Button type="submit" loading={otpLoading} className="w-full">Verify email</Button>
+        </form>
+        <p className="mt-4 text-xs leading-relaxed text-muted">We also sent a verification link to {email} — you can use either the code or the link. You are already signed in.</p>
         <div className="mt-6 flex flex-col gap-2">
-          <Button disabled={resendCooldown > 0} onClick={resend}>{resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend verification email'}</Button>
-          <Button variant="secondary" onClick={() => router.push('/account')}>Go to my account</Button>
+          <Button variant="secondary" disabled={resendCooldown > 0} onClick={resendOtp}>{resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend code'}</Button>
+          <Button variant="secondary" disabled={resendCooldown > 0} onClick={resend}>{resendCooldown > 0 ? `Resend link in ${resendCooldown}s` : 'Resend verification email'}</Button>
+          <Button variant="ghost" onClick={() => router.push('/account')}>Go to my account</Button>
         </div>
       </Card>
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>;
   }
 
@@ -103,16 +220,18 @@ function LoginInner() {
         <div className="my-5 flex items-center gap-3 text-xs text-muted"><span className="h-px flex-1 bg-line" />or<span className="h-px flex-1 bg-line" /></div>
       </>}
       <form onSubmit={submit} className="mt-5 space-y-4" noValidate>
-        {tab === 'register' && <Input label="Your name" autoFocus name="name" autoComplete="name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} onBlur={validate} />}
-        <Input label="Email" name="email" type="email" autoFocus={tab === 'signin'} autoComplete="username" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} onBlur={validate} />
-        <PasswordField label="Password" id="password" name="password" autoComplete={tab === 'register' ? 'new-password' : 'current-password'} placeholder={tab === 'register' ? 'At least 10 characters' : 'Your password'} value={password} onChange={(e) => setPassword(e.target.value)} error={errors.password} showStrength={tab === 'register'} onBlur={validate} />
+        {tab === 'register' && <Input label="Your name" autoFocus name="name" autoComplete="name" placeholder="Your name" value={name} onChange={(e) => { setName(e.target.value); clearError('name'); }} error={errors.name} onBlur={() => validateField('name')} />}
+        <Input label="Email" name="email" type="email" autoFocus={tab === 'signin'} autoComplete="username" placeholder="you@example.com" value={email} onChange={(e) => { setEmail(e.target.value); clearError('email'); }} error={errors.email} onBlur={() => validateField('email')} />
+        <PasswordField label="Password" id="password" name="password" autoComplete={tab === 'register' ? 'new-password' : 'current-password'} placeholder={tab === 'register' ? 'At least 10 characters' : 'Your password'} value={password} onChange={(e) => { setPassword(e.target.value); clearError('password'); }} error={errors.password} showStrength={tab === 'register'} onBlur={() => validateField('password')} />
+        {tab === 'register' && <PasswordField label="Confirm password" id="confirm-password" name="confirm-password" autoComplete="new-password" placeholder="Repeat your password" value={confirmPassword} onChange={(e) => { setConfirmPassword(e.target.value); clearError('confirmPassword'); }} error={errors.confirmPassword} onBlur={() => validateField('confirmPassword')} />}
         {tab === 'register' && (
           <label className="flex items-start gap-2 text-sm text-muted">
-            <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5 h-5 w-5 accent-[#4F46E5]" />
+            <input type="checkbox" checked={terms} onChange={(e) => { setTerms(e.target.checked); clearError('terms'); }} className="mt-0.5 h-5 w-5 accent-[#4F46E5]" />
             <span>I agree to the <Link href="/terms" className="font-semibold text-primary underline">Terms of Service</Link> and <Link href="/privacy-policy" className="font-semibold text-primary underline">Privacy Policy</Link>.</span>
           </label>
         )}
         {errors.terms && <p role="alert" className="text-xs font-medium text-danger">{errors.terms}</p>}
+        {tab === 'register' && <Captcha onToken={setCaptchaToken} resetKey={captchaResetKey} />}
         {tab === 'signin' && (
           <div className="flex items-center justify-between text-sm">
             <label className="flex items-center gap-2 text-muted"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-5 w-5 accent-[#4F46E5]" /> Remember me</label>
@@ -121,6 +240,7 @@ function LoginInner() {
         )}
         {errors.form && <p role="alert" aria-live="polite" className="rounded-card bg-red-50 px-3 py-2 text-sm font-medium text-danger">{errors.form}</p>}
         <Button type="submit" loading={loading} className="w-full">{tab === 'register' ? 'Create account' : 'Sign in'}</Button>
+        {loading && <p role="status" className="text-center text-sm text-muted">{slowLogin ? 'Waking up the server, please wait…' : tab === 'register' ? 'Creating your account…' : 'Signing in…'}</p>}
       </form>
     </Card>
     {toast && <Toast message={toast} onClose={() => setToast(null)} />}
