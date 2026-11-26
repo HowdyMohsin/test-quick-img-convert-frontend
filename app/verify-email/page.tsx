@@ -9,10 +9,10 @@ function VerifyInner() {
   const params = useSearchParams();
   const router = useRouter();
   const token = params.get('token') || '';
-  // TEMPORARY (test-only): while the backend has email verification off
-  // (REQUIRE_EMAIL_VERIFICATION=false) this page never verifies and
-  // never errors — it just points back to the account. The verification
-  // flow comes back with one env change.
+  // Email verification is OFF in the code (user order 2026-11-26):
+  // this page never verifies and never errors — it just points back
+  // to the account. The verification flow comes back when the flag is
+  // turned back on.
   const [state, setState] = useState<'loading' | 'off' | 'ok' | 'expired' | 'error'>('loading');
   useEffect(() => {
     apiFetch('/v1/site').then((d: any) => {

@@ -37,6 +37,7 @@ const CODE_MESSAGES: Record<string, string> = {
   csrf_required: 'Something went wrong — please refresh the page and try again.',
   csrf_invalid: 'Something went wrong — please refresh the page and try again.',
   account_banned: 'This account is banned. Contact support for help.',
+  signin_required: 'Sign in — it’s free — to convert your files.',
   not_found: 'That file could not be found — please upload it again.',
   rate_limited: 'Too many requests — please wait a moment and try again.',
 };

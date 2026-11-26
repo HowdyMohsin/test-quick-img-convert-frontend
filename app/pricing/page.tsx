@@ -59,10 +59,12 @@ function PricingInner() {
   const [toast, setToast] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [verifyPrompt, setVerifyPrompt] = useState(false);
-  // TEMPORARY (test-only): whether the backend requires email
-  // verification before checkout. Defaults true (verification ON);
-  // the backend sends false only when REQUIRE_EMAIL_VERIFICATION=false.
-  const [requireVerification, setRequireVerification] = useState(true);
+  // Email verification is OFF in the code (user order 2026-11-26):
+  // the backend always reports require_email_verification=false, so
+  // this gate never shows. Defaults false — a slow or failed /v1/site
+  // fetch can never flash the "Verify your email first" banner. The
+  // gate code stays for a later re-enable.
+  const [requireVerification, setRequireVerification] = useState(false);
 
   useEffect(() => {
     fetchMe().then(setMe);
@@ -100,10 +102,10 @@ function PricingInner() {
 
   const startCheckout = (p: Plan) => {
     if (!me?.user) { router.push(`/login?next=/pricing`); return; }
-    // TEMPORARY (test-only): the "Verify your email first" gate applies
-    // only while the backend requires email verification
-    // (REQUIRE_EMAIL_VERIFICATION=true, the default). When the flag is
-    // off, unverified users check out like everyone else.
+    // The "Verify your email first" gate applies only while the
+    // backend requires email verification. Verification is OFF in the
+    // code (user order 2026-11-26), so unverified users check out like
+    // everyone else. The gate stays for a later re-enable.
     if (requireVerification && me.user.email_verified_at == null) { setVerifyPrompt(true); return; }
     setPicker(p);
   };

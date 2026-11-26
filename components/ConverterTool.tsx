@@ -7,6 +7,8 @@ import { Button, Card, CompareSlider, EmptyState, FileThumb, Modal, Progress, Sw
 import { Check, Download, Eye, LayoutGrid, List, Lock, PenLine, Pencil, Trash2, Upload, X } from 'lucide-react';
 import { AdFrame, MobileAnchorAd } from './AdFrame';
 import { HeroPicker, HOME_UPLOAD_HANDOFF_KEY, type HomeUploadHandoff, type HomeUploadHandoffPayload } from './HeroPicker';
+import { useMe } from './Header';
+import { useRouter } from 'next/navigation';
 
 type FileStatus = 'ready' | 'uploading' | 'converting' | 'waiting' | 'done' | 'error';
 interface ToolFile {
@@ -44,6 +46,8 @@ const PRESETS: Record<string, { label: string; apply: (f: ToolFile) => Partial<T
 };
 
 export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from: FormatInfo; to: FormatInfo; catalog: Catalog; usage?: { used: number; limit: number } | null; disabledPair?: boolean }) {
+  const router = useRouter();
+  const { me, loaded } = useMe();
   const [files, setFiles] = useState<ToolFile[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [dragOverSide, setDragOverSide] = useState(false);
@@ -596,6 +600,15 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   const doneFiles = files.filter((f) => f.status === 'done').length;
   const failedFiles = files.filter((f) => f.status === 'error').length;
   const waitingFiles = files.filter((f) => f.status === 'waiting').length;
+  // Suspense lock (user order 2026-11-26): once >=1 file is uploaded
+  // (ready or further along — converting, waiting, done), an anonymous
+  // visitor cannot pick a target or convert — the bar's "Convert to"
+  // locks and "Convert all" becomes "Sign in free to convert".
+  // Signing in (free, no verification) unlocks both at once. The
+  // backend refuses anonymous converts as well, so the rule cannot be
+  // bypassed from the browser console.
+  const hasUploadedFiles = files.some((f) => f.status === 'ready' || f.status === 'waiting' || f.status === 'converting' || f.status === 'done');
+  const suspenseLocked = loaded && !me && hasUploadedFiles;
   // The staged list shows everything not finished yet; finished files
   // move to their own "Converted Files" section, newest first.
   const pendingFiles = files.filter((f) => f.status !== 'done');
@@ -665,7 +678,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
         <p className="mt-2 text-sm text-muted">{pairDescription(from, to)}</p>
         <div className="mt-5">
           <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">Change converter</p>
-          <HeroPicker catalog={catalog} layout="bar" initialFrom={from.slug} initialTo={to.slug} lockedFrom={files.length > 0} />
+          <HeroPicker catalog={catalog} layout="bar" initialFrom={from.slug} initialTo={to.slug} lockedFrom={files.length > 0} lockedTo={suspenseLocked} />
         </div>
       </div>
       <div className="border-t border-line">
@@ -802,9 +815,15 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
           )}
 
           <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">
-            <Button onClick={convertAll} loading={running} disabled={running || files.every((f) => f.status === 'done') || files.length === 0}>
-              Convert all ({files.filter((f) => f.status !== 'done').length}){totalOut ? ` · about ${formatBytes(totalOut)}` : ''}
-            </Button>
+            {suspenseLocked ? (
+              <Button onClick={() => router.push(`/login?next=${encodeURIComponent(`/convert/${from.slug}-to-${to.slug}`)}`)}>
+                <Lock className="h-5 w-5" aria-hidden /> Sign in free to convert
+              </Button>
+            ) : (
+              <Button onClick={convertAll} loading={running} disabled={running || files.every((f) => f.status === 'done') || files.length === 0}>
+                Convert all ({files.filter((f) => f.status !== 'done').length}){totalOut ? ` · about ${formatBytes(totalOut)}` : ''}
+              </Button>
+            )}
             {running && <Button variant="secondary" onClick={cancelAll}>Cancel all</Button>}
             {doneFiles > 0 && failedFiles === 0 && (
               <Button variant="ghost" onClick={() => { setFiles([]); setDoneCount(0); clearHandoff(); }}>Convert another batch</Button>

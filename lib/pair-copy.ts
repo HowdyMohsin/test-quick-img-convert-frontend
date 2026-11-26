@@ -7,7 +7,7 @@ export function pairDescription(from: FormatInfo, to: FormatInfo): string {
 
 export function pairFaqs(from: FormatInfo, to: FormatInfo) {
   return [
-    { q: `Is the ${from.label} to ${to.label} converter free?`, a: `Yes. You can convert ${from.label} to ${to.label} for free — anonymous visitors get 5 conversions a day, and a free account raises that to 25 a day with conversion history.` },
+    { q: `Is the ${from.label} to ${to.label} converter free?`, a: `Yes. You can convert ${from.label} to ${to.label} for free — a free account gives you 25 conversions a day with conversion history. Anonymous visitors can upload and preview files, and sign in free to convert them.` },
     { q: `Do I need to install anything to convert ${from.label} to ${to.label}?`, a: `No. The converter runs entirely in your browser and on our servers. Just upload your ${from.label} file and download the ${to.label} result — nothing to install on Windows, Mac, or Linux.` },
     { q: `Will my ${from.label} file lose quality when converted to ${to.label}?`, a: to.category === 'Images' || from.category === 'Images'
       ? `It depends on the settings you choose. For the best quality, keep the quality slider high and the original resolution. ${to.label} is ${to.slug === 'jpg' ? 'a lossy format, so a small amount of quality is traded for a much smaller file' : 'a high-quality target for this conversion'}.`

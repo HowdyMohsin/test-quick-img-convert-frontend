@@ -43,11 +43,11 @@ function AccountInner() {
   const [newEmail, setNewEmail] = useState('');
   const [emailPw, setEmailPw] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
-  // TEMPORARY (test-only): while the backend has email verification off
-  // (REQUIRE_EMAIL_VERIFICATION=false) every verification surface on
-  // this page is hidden — badge, resend button, and the verification
-  // step of changing email. Defaults true (verification ON).
-  const [requireVerification, setRequireVerification] = useState(true);
+  // Email verification is OFF in the code (user order 2026-11-26):
+  // every verification surface on this page is hidden — badge, resend
+  // button, and the verification step of changing email. Defaults
+  // false, so no badge can flash before /v1/site answers.
+  const [requireVerification, setRequireVerification] = useState(false);
 
   const load = async () => {
     const m = await fetchMe();

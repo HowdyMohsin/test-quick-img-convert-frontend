@@ -17,8 +17,8 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 const FAQ = [
-  { q: 'Is this file converter really free?', a: 'Yes. Anonymous visitors can convert 5 files a day for free, and a free account raises that to 25 a day with conversion history. Paid plans remove ads and raise the limits further.' },
-  { q: 'Do I need to create an account?', a: 'No. You can convert files right away without signing up. An account is only needed for higher daily limits, history, and paid plans.' },
+  { q: 'Is this file converter really free?', a: 'Yes. Converting is free with an account — a free account gives you 25 conversions a day with conversion history. Anonymous visitors can upload and preview files, and sign in free to convert them. Paid plans remove ads and raise the limits further.' },
+  { q: 'Do I need to create an account?', a: 'Yes — a free account is needed to convert. Signing up is free and takes a minute, and gives you 25 conversions a day, conversion history, and paid plans. You can upload and preview files without an account.' },
   { q: 'Are my files safe?', a: 'Uploads travel over secure HTTPS and every file is deleted automatically after 24 hours. We never share your files with anyone.' },
   { q: 'What formats can I convert?', a: 'Images, camera RAW files, audio, video, PDF, SVG, and PSD — hundreds of conversion pairs in total, listed in the All Formats section below.' },
   { q: 'Can I convert several files at once?', a: 'Yes. Batch conversion is supported on every converter page, and you can download all results together as a ZIP.' },
@@ -40,7 +40,7 @@ export default async function HomePage() {
       </div>
       <div className="mx-auto mt-8 max-w-3xl"><HeroPicker catalog={catalog} showUploadBox /></div>
       <div className="mx-auto mt-8 grid max-w-4xl gap-3 text-center sm:grid-cols-3">
-        {['Files auto-delete after 24 hours', 'Secure HTTPS upload', 'No account needed for 5 conversions a day'].map((t) => (
+        {['Files auto-delete after 24 hours', 'Secure HTTPS upload', 'Sign in free to convert'].map((t) => (
           <div key={t} className="flex items-center justify-center gap-2 rounded-card border border-line bg-surface px-3 py-2.5 text-sm font-medium text-ink">
             <Check className="h-4 w-4 shrink-0 text-success" aria-hidden /> {t}
           </div>

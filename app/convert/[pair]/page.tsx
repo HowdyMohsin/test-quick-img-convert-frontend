@@ -99,7 +99,7 @@ export default async function ConvertPage({ params }: { params: { pair: string }
       <AdFrame slot="pair_top" />
 
       <div className="mx-auto mt-4 grid max-w-4xl gap-3 text-center sm:grid-cols-3">
-        {['Files auto-delete after 24 hours', 'Secure HTTPS upload', 'No account needed for 5 conversions a day'].map((t) => (
+        {['Files auto-delete after 24 hours', 'Secure HTTPS upload', 'Sign in free to convert'].map((t) => (
           <div key={t} className="flex items-center justify-center gap-2 rounded-card border border-line bg-surface px-3 py-2.5 text-sm font-medium text-ink">
             <Check className="h-4 w-4 shrink-0 text-success" aria-hidden /> {t}
           </div>
@@ -219,8 +219,8 @@ export default async function ConvertPage({ params }: { params: { pair: string }
 
       <section className="mt-12 mb-6">
         <div className="rounded-card-xl bg-primary px-6 py-10 text-center text-white">
-          <h2 className="text-2xl font-extrabold">Need more than 5 conversions a day?</h2>
-          <p className="mx-auto mt-2 max-w-xl text-indigo-100">A free account gives you 25 conversions a day and keeps your conversion history.</p>
+          <h2 className="text-2xl font-extrabold">Want 25 conversions a day?</h2>
+          <p className="mx-auto mt-2 max-w-xl text-indigo-100">Sign in free to convert — a free account gives you 25 conversions a day and keeps your conversion history.</p>
           <Link href="/login?mode=register" className="mt-6 inline-flex min-h-[48px] items-center rounded-card bg-white px-6 text-sm font-bold text-primary hover:bg-indigo-50">Create a free account</Link>
         </div>
       </section>

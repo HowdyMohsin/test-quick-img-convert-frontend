@@ -43,7 +43,7 @@ export function ExitPopup() {
     return () => document.removeEventListener('mouseout', onLeave);
   }, []);
   return <Modal open={open} onClose={() => setOpen(false)} title="Before you go — convert more, free">
-    <p className="text-sm text-muted">Create a free account and get 25 conversions a day instead of 5, plus your conversion history.</p>
+    <p className="text-sm text-muted">Create a free account to convert — 25 conversions a day, plus your conversion history.</p>
     <div className="mt-5 flex gap-2">
       <Link href="/login?mode=register" className="inline-flex min-h-[44px] items-center rounded-card bg-primary px-5 text-sm font-semibold text-white" onClick={() => setOpen(false)}>Create a free account</Link>
       <Button variant="secondary" onClick={() => setOpen(false)}>Not now</Button>

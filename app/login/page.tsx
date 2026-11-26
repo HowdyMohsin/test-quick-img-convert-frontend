@@ -166,10 +166,10 @@ function LoginInner() {
           }
         }
         const res = await apiFetch<{ require_email_verification?: boolean }>('/v1/auth/register', { method: 'POST', body: { name: name.trim(), email: email.trim(), password, terms_accepted: terms, remember_me: remember } });
-        // TEMPORARY (test-only): when the backend has email verification
-        // switched off (REQUIRE_EMAIL_VERIFICATION=false), registration
-        // lands straight on the account — no OTP screen, no verification
-        // prompt. The OTP screen stays for the default (verification on).
+        // Email verification is OFF in the code (user order
+        // 2026-11-26), so registration lands straight on the account —
+        // no OTP screen, no verification prompt. The OTP screen stays
+        // for a later re-enable (when the backend reports the flag on).
         if (res?.require_email_verification === false) {
           router.push('/account');
           router.refresh();
