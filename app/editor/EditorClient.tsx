@@ -113,6 +113,8 @@ export default function EditorClient() {
   const [brushSize, setBrushSize] = useState(6);
   const [adjust, setAdjust] = useState<Adjust>(DEFAULT_ADJUST);
   const [sharpenStrength, setSharpenStrength] = useState(50);
+  // Re-entry guard for the async sharpen run (a ref, so the UI is untouched).
+  const sharpeningRef = useRef(false);
   const [watermark, setWatermark] = useState<Watermark>(DEFAULT_WATERMARK);
   const [frame, setFrame] = useState<Frame>(DEFAULT_FRAME);
   const [cropRect, setCropRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -207,7 +209,7 @@ export default function EditorClient() {
     const img = await loadImageFromDataUrl(dataUrl);
     base.width = img.naturalWidth;
     base.height = img.naturalHeight;
-    const ctx = base.getContext('2d');
+    const ctx = base.getContext('2d', { willReadFrequently: true });
     if (!ctx) return;
     ctx.drawImage(img, 0, 0);
     setDims({ w: base.width, h: base.height });
@@ -236,7 +238,7 @@ export default function EditorClient() {
     if (!base) return;
     base.width = img.naturalWidth;
     base.height = img.naturalHeight;
-    const ctx = base.getContext('2d');
+    const ctx = base.getContext('2d', { willReadFrequently: true });
     if (!ctx) return;
     ctx.drawImage(img, 0, 0);
     setFileName(name);
@@ -524,36 +526,54 @@ export default function EditorClient() {
   // Sharpen is a 3x3 convolution on the base pixels — canvas filters
   // have no sharpen. The kernel is blended by strength (0% = the
   // original pixels), so one click is one undoable step.
-  const applySharpen = () => {
+  const applySharpen = async () => {
     const base = baseRef.current;
-    if (!base || base.width === 0 || sharpenStrength <= 0) return;
-    const ctx = base.getContext('2d');
+    if (!base || base.width === 0 || sharpenStrength <= 0 || sharpeningRef.current) return;
+    const ctx = base.getContext('2d', { willReadFrequently: true });
     if (!ctx) return;
-    const w = base.width;
-    const h = base.height;
-    const src = ctx.getImageData(0, 0, w, h);
-    const dst = ctx.createImageData(w, h);
-    const s = src.data;
-    const d = dst.data;
-    const strength = sharpenStrength / 100;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const i = (y * w + x) * 4;
-        for (let c = 0; c < 3; c++) {
-          const center = s[i + c];
-          const up = s[(Math.max(0, y - 1) * w + x) * 4 + c];
-          const down = s[(Math.min(h - 1, y + 1) * w + x) * 4 + c];
-          const left = s[(y * w + Math.max(0, x - 1)) * 4 + c];
-          const right = s[(y * w + Math.min(w - 1, x + 1)) * 4 + c];
-          const conv = 5 * center - up - down - left - right;
-          d[i + c] = Math.max(0, Math.min(255, Math.round(center + strength * (conv - center))));
+    sharpeningRef.current = true;
+    try {
+      const w = base.width;
+      const h = base.height;
+      const src = ctx.getImageData(0, 0, w, h);
+      const dst = ctx.createImageData(w, h);
+      const s = src.data;
+      const d = dst.data;
+      const strength = sharpenStrength / 100;
+      // Row chunks + yield: the convolution is O(w*h) and a phone photo is
+      // ~12MP, so one synchronous block freezes the tab for seconds (the
+      // observed hang). Row offsets are hoisted out of the inner loop.
+      const CHUNK_ROWS = 32;
+      for (let y0 = 0; y0 < h; y0 += CHUNK_ROWS) {
+        const y1 = Math.min(h, y0 + CHUNK_ROWS);
+        for (let y = y0; y < y1; y++) {
+          const up = Math.max(0, y - 1) * w * 4;
+          const down = Math.min(h - 1, y + 1) * w * 4;
+          const row = y * w * 4;
+          for (let x = 0; x < w; x++) {
+            const i = row + x * 4;
+            const xi = x * 4;
+            const left = row + (x > 0 ? xi - 4 : 0);
+            const right = row + (x < w - 1 ? xi + 4 : (w - 1) * 4);
+            for (let c = 0; c < 3; c++) {
+              const center = s[i + c];
+              const conv = 5 * center - s[up + xi + c] - s[down + xi + c] - s[left + c] - s[right + c];
+              d[i + c] = Math.max(0, Math.min(255, Math.round(center + strength * (conv - center))));
+            }
+            d[i + 3] = s[i + 3];
+          }
         }
-        d[i + 3] = s[i + 3];
+        await new Promise((resolve) => setTimeout(resolve, 0));
       }
+      ctx.putImageData(dst, 0, 0);
+      commit();
+      renderView();
+    } catch {
+      // A failed pixel readback must never leave a dead click. The image is
+      // untouched here (dst was never put); the editor stays usable.
+    } finally {
+      sharpeningRef.current = false;
     }
-    ctx.putImageData(dst, 0, 0);
-    commit();
-    renderView();
   };
 
   // Burns the watermark into the base image (one undoable step) and
