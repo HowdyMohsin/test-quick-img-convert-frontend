@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
+import { Check, ChevronDown, File, FileText, Image as ImageIcon, Music, Upload, Video, X } from 'lucide-react';
 
 // ---- Button ----
 export function Button({ children, variant = 'primary', loading, disabled, className = '', ...rest }:
@@ -64,7 +65,7 @@ export function Skeleton({ className = '' }: { className?: string }) {
 
 export function EmptyState({ title, body, action }: { title: string; body?: string; action?: React.ReactNode }) {
   return <div className="flex flex-col items-center justify-center rounded-card-lg border border-dashed border-line bg-soft/50 px-6 py-12 text-center">
-    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50 text-2xl" aria-hidden>⇪</div>
+    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50" aria-hidden><Upload className="h-7 w-7 text-primary" /></div>
     <h3 className="text-base font-bold text-ink">{title}</h3>
     {body && <p className="mt-1 max-w-sm text-sm text-muted">{body}</p>}
     {action && <div className="mt-4">{action}</div>}
@@ -108,7 +109,7 @@ export function Modal({ open, onClose, title, children, labelledBy }: { open: bo
     <div ref={ref} className="w-full max-w-lg rounded-card-xl bg-surface p-6 shadow-card" onClick={(e) => e.stopPropagation()}>
       <div className="mb-4 flex items-start justify-between gap-4">
         <h2 id={labelledBy} className="text-lg font-bold text-ink">{title}</h2>
-        <button onClick={onClose} aria-label="Close dialog" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">✕</button>
+        <button onClick={onClose} aria-label="Close dialog" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X className="h-5 w-5" /></button>
       </div>
       {children}
     </div>
@@ -129,7 +130,7 @@ export function Drawer({ open, onClose, title, children }: { open: boolean; onCl
     <div className="absolute right-0 top-0 flex h-full w-full max-w-sm flex-col bg-surface shadow-card">
       <div className="flex items-center justify-between border-b border-line px-5 py-4">
         <h2 className="text-base font-bold text-ink">{title}</h2>
-        <button onClick={onClose} aria-label="Close panel" className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">✕</button>
+        <button onClick={onClose} aria-label="Close panel" className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X className="h-5 w-5" /></button>
       </div>
       <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
     </div>
@@ -141,7 +142,7 @@ export function Toast({ message, onClose }: { message: string; onClose: () => vo
   useEffect(() => { const t = setTimeout(onClose, 6000); return () => clearTimeout(t); }, [onClose]);
   return <div role="status" className="fixed bottom-4 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-3 rounded-card-lg bg-ink px-4 py-3 text-sm text-white shadow-card">
     <span>{message}</span>
-    <button onClick={onClose} aria-label="Dismiss" className="rounded p-1 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">✕</button>
+    <button onClick={onClose} aria-label="Dismiss" className="rounded p-1 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><X className="h-4 w-4" /></button>
   </div>;
 }
 
@@ -199,7 +200,7 @@ export function Accordion({ items }: { items: { q: string; a: string }[] }) {
       <div key={i}>
         <button aria-expanded={open === i} onClick={() => setOpen(open === i ? null : i)}
           className="flex min-h-[52px] w-full items-center justify-between gap-4 px-5 py-3 text-left text-sm font-semibold text-ink hover:bg-soft/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary">
-          <span>{it.q}</span><span aria-hidden className="text-muted">{open === i ? '−' : '+'}</span>
+          <span>{it.q}</span><ChevronDown aria-hidden className={`h-5 w-5 shrink-0 text-muted transition-transform ${open === i ? 'rotate-180' : ''}`} />
         </button>
         {open === i && <p className="px-5 pb-4 text-sm leading-relaxed text-muted">{it.a}</p>}
       </div>
@@ -260,6 +261,6 @@ export function CompareSlider({ beforeLabel, afterLabel }: { beforeLabel: string
 }
 
 export function FileThumb({ kind, label }: { kind: 'image' | 'audio' | 'video' | 'pdf' | 'file'; label: string }) {
-  const icons = { image: '🖼', audio: '♪', video: '▶', pdf: '▤', file: '▣' };
-  return <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-soft text-lg" aria-hidden title={label}>{icons[kind]}</div>;
+  const Icon = { image: ImageIcon, audio: Music, video: Video, pdf: FileText, file: File }[kind];
+  return <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-soft text-primary" aria-hidden title={label}><Icon className="h-6 w-6" /></div>;
 }

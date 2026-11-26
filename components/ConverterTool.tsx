@@ -3,11 +3,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch, formatBytes, getCsrf, truncateMiddle } from '@/lib/api';
 import type { FormatInfo, Catalog } from '@/lib/catalog';
 import { Button, Card, CompareSlider, EmptyState, FileThumb, Modal, Progress, Switch, Toast, Tooltip } from './ui';
+import { Check, Eye, Lock, Pencil, Upload, X } from 'lucide-react';
 import { AdFrame, MobileAnchorAd } from './AdFrame';
+import { HeroPicker, HOME_UPLOAD_HANDOFF_KEY, type HomeUploadHandoff } from './HeroPicker';
 
 type FileStatus = 'ready' | 'uploading' | 'converting' | 'done' | 'error';
 interface ToolFile {
-  id: string; file: File; name: string; size: number; detected: string;
+  id: string; file?: File; name: string; size: number; detected: string;
   status: FileStatus; progress: number; error?: string; hint?: string;
   downloadUrl?: string; outSize?: number; savings?: number; jobId?: string; uploadId?: string;
   quality: number; compress: number; stripMeta: boolean; bitrate: string; channels: string; sampleRate: string;
@@ -69,6 +71,35 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       .catch(() => {});
   }, []);
 
+  // Files staged on the home page were already uploaded there and handed
+  // over through sessionStorage — show each as its own row here, with no
+  // re-upload needed. Only files matching this converter are kept.
+  const handoffDone = useRef(false);
+  useEffect(() => {
+    if (handoffDone.current) return;
+    handoffDone.current = true;
+    let raw: string | null = null;
+    try { raw = sessionStorage.getItem(HOME_UPLOAD_HANDOFF_KEY); sessionStorage.removeItem(HOME_UPLOAD_HANDOFF_KEY); } catch { /* ignore */ }
+    if (!raw) return;
+    let items: HomeUploadHandoff[] = [];
+    try { items = JSON.parse(raw); } catch { return; }
+    const matching = (Array.isArray(items) ? items : []).filter((it) => {
+      if (!it || !it.uploadId || !it.name) return false;
+      const ext = it.name.split('.').pop()?.toLowerCase() || '';
+      return it.detected === from.slug || from.extensions.includes(ext) || from.aliases.includes(ext);
+    });
+    if (!matching.length) return;
+    const mapped: ToolFile[] = matching.map((it, i) => ({
+      id: `home-${Date.now()}-${i}-${it.name}`, name: it.name, size: it.size,
+      detected: (it.detected || it.name.split('.').pop() || '').toUpperCase(),
+      status: 'ready', progress: 0, uploadId: it.uploadId,
+      quality: 85, compress: 6, stripMeta: true, bitrate: '192', channels: 'Stereo', sampleRate: '44100', codec: 'H.264', crf: 23, resolution: 'Original',
+    }));
+    setFiles((prev) => [...prev, ...mapped]);
+    setToast(`${matching.length} file${matching.length === 1 ? '' : 's'} added from the home page.`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const addFiles = useCallback((list: FileList | File[]) => {
     const incoming = Array.from(list);
     setFiles((prev) => {
@@ -108,7 +139,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   const removeFile = (id: string) => setFiles((fs) => fs.filter((f) => f.id !== id));
 
   const openPreview = (tf: ToolFile) => {
-    if (!isImagePair) return;
+    if (!isImagePair || !tf.file) return;
     const url = URL.createObjectURL(tf.file);
     setPreviewFile({ url, name: tf.name });
   };
@@ -123,6 +154,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       let uploadId = tf.uploadId;
       if (!uploadId) {
         const form = new FormData();
+        if (!tf.file) throw new Error('This file was not uploaded — please add it again.');
         form.append('file', tf.file);
         const up = await apiFetch<{ id: string; upload_id?: string }>('/v1/uploads', { method: 'POST', body: form });
         uploadId = up.id || up.upload_id || '';
@@ -145,12 +177,20 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   const convertOne = async (tf: ToolFile, batchId: string): Promise<void> => {
     if (abortRef.current[tf.id]) return;
     try {
-      updateFile(tf.id, { status: 'uploading', progress: 5 });
-      const form = new FormData();
-      form.append('file', tf.file);
-      const up = await apiFetch<{ id: string; upload_id?: string }>('/v1/uploads', { method: 'POST', body: form });
-      const uploadId = up.id || up.upload_id || '';
-      updateFile(tf.id, { uploadId, progress: 30 });
+      // Files handed over from the home page already have an upload id —
+      // skip the upload and convert straight away.
+      let uploadId = tf.uploadId || '';
+      if (uploadId) {
+        updateFile(tf.id, { status: 'uploading', progress: 30 });
+      } else {
+        updateFile(tf.id, { status: 'uploading', progress: 5 });
+        if (!tf.file) throw new Error('This file was not uploaded — please add it again.');
+        const form = new FormData();
+        form.append('file', tf.file);
+        const up = await apiFetch<{ id: string; upload_id?: string }>('/v1/uploads', { method: 'POST', body: form });
+        uploadId = up.id || up.upload_id || '';
+        updateFile(tf.id, { uploadId, progress: 30 });
+      }
       if (abortRef.current[tf.id]) return;
       updateFile(tf.id, { status: 'converting', progress: 45 });
       // Quality and compression are separate controls:
@@ -304,23 +344,23 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                     <p className="truncate text-sm font-semibold text-ink" title={f.name}>{truncateMiddle(f.name)}</p>
                     <p className="text-xs text-muted">{formatBytes(f.size)} · <span className="rounded bg-soft px-1.5 py-0.5 font-semibold">{f.detected}</span> → {to.label}</p>
                     {(f.status === 'uploading' || f.status === 'converting') && <div className="mt-2"><Progress value={f.progress} label={f.status === 'uploading' ? 'Uploading' : 'Converting'} /></div>}
-                    {f.status === 'done' && <p className="mt-1 text-xs font-semibold text-success">✓ Done · {formatBytes(f.outSize || 0)}{f.savings ? ` · ${f.savings > 0 ? `-${f.savings}%` : `+${-f.savings}%`}` : ''}</p>}
+                    {f.status === 'done' && <p className="mt-1 flex items-center text-xs font-semibold text-success"><Check className="mr-1 h-3.5 w-3.5" />Done · {formatBytes(f.outSize || 0)}{f.savings ? ` · ${f.savings > 0 ? `-${f.savings}%` : `+${-f.savings}%`}` : ''}</p>}
                     {f.status === 'error' && <p className="mt-1 text-xs text-danger">{f.error} {f.hint}</p>}
                   </div>
-                  {isImagePair && (
+                  {isImagePair && f.file && (
                     <>
                       <button onClick={() => openPreview(f)} aria-label={`Preview ${f.name}`} title="Preview"
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">👁</button>
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Eye className="h-5 w-5" /></button>
                       <button onClick={() => openInEditor(f)} aria-label="Edit in image editor" title={editorAllowed ? 'Edit in image editor' : 'Image editor — Basic and Pro only'}
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{editorAllowed ? '✎' : '🔒'}</button>
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{editorAllowed ? <Pencil className="h-5 w-5" /> : <Lock className="h-5 w-5" />}</button>
                     </>
                   )}
                   {f.status === 'uploading' || f.status === 'converting' ? (
                     <button onClick={() => { abortRef.current[f.id] = true; updateFile(f.id, { status: 'ready', progress: 0 }); }} aria-label={`Cancel ${f.name}`}
-                      className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">✕</button>
+                      className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X className="h-5 w-5" /></button>
                   ) : (
                     <button onClick={() => removeFile(f.id)} aria-label={`Remove ${f.name}`}
-                      className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">✕</button>
+                      className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X className="h-5 w-5" /></button>
                   )}
                 </div>
                 {f.status === 'done' && f.downloadUrl && (
@@ -442,7 +482,11 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
         </div>
       )}
     </Card>
-    <aside className="space-y-4" aria-label="Upload and advertisement">
+    <aside className="space-y-4" aria-label="Change converter, upload and advertisement">
+      <div>
+        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">Change converter</p>
+        <HeroPicker catalog={catalog} layout="side" initialFrom={from.slug} initialTo={to.slug} />
+      </div>
       <Card className="overflow-hidden">
         <div
           role="button" tabIndex={0} aria-label={`Drop ${from.label} files here, or press Enter to browse`}
@@ -452,7 +496,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
           onDragLeave={() => setDragOver(false)}
           onDrop={(e) => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
           className={`flex cursor-pointer flex-col items-center justify-center gap-1 border-2 border-dashed px-4 py-6 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${dragOver ? 'border-primary bg-indigo-50 shadow-[0_0_0_4px_rgba(79,70,229,.15)]' : 'border-line bg-soft/40 hover:border-primary/50'}`}>
-          <span aria-hidden className="text-2xl">⇪</span>
+          <Upload className="h-7 w-7 text-muted" aria-hidden />
           <p className="text-sm font-bold text-ink">Drop files here or browse</p>
           <p className="text-xs text-muted">Accepted: {acceptExts}</p>
           <input ref={inputRef} type="file" accept={acceptExts} multiple className="hidden" aria-hidden

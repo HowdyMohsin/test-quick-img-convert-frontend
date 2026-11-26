@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { apiFetch, fetchMe, type MeResponse } from '@/lib/api';
 import { brand } from '@/lib/brand';
 import { Button, Card, CopyField, Input, Modal, Segmented, Toast, Accordion, Badge } from '@/components/ui';
+import { Check } from 'lucide-react';
 import { Suspense } from 'react';
 
 interface Plan { id: string; name: string; price_cents: number; price_yearly_cents: number; limits: any; featured?: number }
@@ -140,13 +141,13 @@ function PricingInner() {
             <span className="text-muted">/{interval === 'monthly' ? 'month' : 'year'}</span>
           </p>
           <ul className="mt-4 flex-1 space-y-2 text-sm text-muted">
-            <li>✓ {l.daily ?? '—'} conversions per day</li>
-            <li>✓ {l.batch ?? '—'} files per batch</li>
-            <li>✓ Up to {l.img_mb ?? '—'} MB images</li>
-            <li>✓ {l.vid_mb ?? '—'} MB video</li>
-            {!l.ads && <li>✓ No ads</li>}
-            {l.ads && <li>✓ Ads shown</li>}
-            {l.priority && <li>✓ Priority processing</li>}
+            <li className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />{l.daily ?? '—'} conversions per day</li>
+            <li className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />{l.batch ?? '—'} files per batch</li>
+            <li className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />Up to {l.img_mb ?? '—'} MB images</li>
+            <li className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />{l.vid_mb ?? '—'} MB video</li>
+            {!l.ads && <li className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />No ads</li>}
+            {l.ads && <li className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />Ads shown</li>}
+            {l.priority && <li className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />Priority processing</li>}
           </ul>
           <Button className="mt-6 w-full" variant={isCurrent ? 'secondary' : 'primary'} disabled={isCurrent || p.price_cents === 0 && p.id === 'free' && !me?.user} onClick={() => startCheckout(p)}>
             {isCurrent ? 'Current plan' : p.price_cents === 0 ? 'Get started free' : 'Upgrade'}

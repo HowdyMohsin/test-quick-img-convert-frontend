@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Button, Card, EmptyState } from '@/components/ui';
+import { Crop, Download, FlipHorizontal2, FlipVertical2, Image as ImageIcon, Lock, Pencil, Redo2, RotateCcw, RotateCw, Undo2 } from 'lucide-react';
 
 type Status = 'checking' | 'loading' | 'ready' | 'locked' | 'error' | 'empty';
 type Tool = 'draw' | 'crop';
@@ -477,7 +478,7 @@ export default function EditorClient() {
   const resetAdjustments = () => setAdjust(DEFAULT_ADJUST);
 
   const toolBtn = (active: boolean) =>
-    `min-h-[40px] rounded-lg px-3.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+    `inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
       active ? 'bg-primary text-white' : 'bg-soft text-ink hover:bg-line'
     }`;
 
@@ -499,7 +500,7 @@ export default function EditorClient() {
       <div className="mx-auto max-w-3xl px-4 py-8">
         <h1 className="text-3xl font-extrabold tracking-tight text-ink">Image editor</h1>
         <Card className="mt-6 p-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50 text-2xl" aria-hidden>🔒</div>
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50" aria-hidden><Lock className="h-7 w-7 text-primary" /></div>
           <h2 className="text-xl font-bold text-ink">The image editor is a Basic &amp; Pro feature</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted">
             {plan ? `Your current plan is ${plan}. ` : ''}Upgrade to Basic or Pro to draw, crop, resize, rotate and adjust your images right in the browser.
@@ -544,7 +545,7 @@ export default function EditorClient() {
             if (f) void loadLocalFile(f);
           }}
         >
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50 text-2xl" aria-hidden>🖼️</div>
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50" aria-hidden><ImageIcon className="h-7 w-7 text-primary" /></div>
           <p className="font-bold text-ink">Drop an image here, or choose one</p>
           <p className="mt-1 text-sm text-muted">PNG, JPG, WEBP, GIF, AVIF and more. Your image never leaves your browser.</p>
           <input
@@ -584,7 +585,7 @@ export default function EditorClient() {
             <option value="png">PNG</option>
             <option value="jpg">JPG</option>
           </select>
-          <Button onClick={download}>⬇ Download</Button>
+          <Button onClick={download}><Download className="h-4 w-4" /> Download</Button>
         </div>
       </div>
 
@@ -594,8 +595,8 @@ export default function EditorClient() {
           <Card className="p-4">
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted">Tools</h2>
             <div className="mt-3 flex gap-2">
-              <button type="button" className={toolBtn(tool === 'draw')} aria-pressed={tool === 'draw'} onClick={() => { setTool('draw'); setCropRect(null); }}>✏️ Draw</button>
-              <button type="button" className={toolBtn(tool === 'crop')} aria-pressed={tool === 'crop'} onClick={() => setTool('crop')}>◫ Crop</button>
+              <button type="button" className={toolBtn(tool === 'draw')} aria-pressed={tool === 'draw'} onClick={() => { setTool('draw'); setCropRect(null); }}><Pencil className="h-4 w-4" /> Draw</button>
+              <button type="button" className={toolBtn(tool === 'crop')} aria-pressed={tool === 'crop'} onClick={() => setTool('crop')}><Crop className="h-4 w-4" /> Crop</button>
             </div>
             {tool === 'draw' && (
               <div className="mt-4 space-y-3">
@@ -650,10 +651,10 @@ export default function EditorClient() {
           <Card className="p-4">
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted">Rotate &amp; flip</h2>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <button type="button" className={toolBtn(false)} onClick={() => rotate(-1)}>↺ Rotate left</button>
-              <button type="button" className={toolBtn(false)} onClick={() => rotate(1)}>↻ Rotate right</button>
-              <button type="button" className={toolBtn(false)} onClick={() => flip(true)}>⇔ Flip horizontal</button>
-              <button type="button" className={toolBtn(false)} onClick={() => flip(false)}>⇕ Flip vertical</button>
+              <button type="button" className={toolBtn(false)} onClick={() => rotate(-1)}><RotateCcw className="h-4 w-4" /> Rotate left</button>
+              <button type="button" className={toolBtn(false)} onClick={() => rotate(1)}><RotateCw className="h-4 w-4" /> Rotate right</button>
+              <button type="button" className={toolBtn(false)} onClick={() => flip(true)}><FlipHorizontal2 className="h-4 w-4" /> Flip horizontal</button>
+              <button type="button" className={toolBtn(false)} onClick={() => flip(false)}><FlipVertical2 className="h-4 w-4" /> Flip vertical</button>
             </div>
           </Card>
 
@@ -693,8 +694,8 @@ export default function EditorClient() {
           <Card className="p-4">
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted">History</h2>
             <div className="mt-3 flex gap-2">
-              <Button variant="secondary" className="flex-1" disabled={!canUndo} onClick={() => void undo()}>↩ Undo</Button>
-              <Button variant="secondary" className="flex-1" disabled={!canRedo} onClick={() => void redo()}>↪ Redo</Button>
+              <Button variant="secondary" className="flex-1" disabled={!canUndo} onClick={() => void undo()}><Undo2 className="h-4 w-4" /> Undo</Button>
+              <Button variant="secondary" className="flex-1" disabled={!canRedo} onClick={() => void redo()}><Redo2 className="h-4 w-4" /> Redo</Button>
             </div>
           </Card>
         </aside>

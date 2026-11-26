@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
+import { X } from 'lucide-react';
 import { brand } from '@/lib/brand';
 
 // Ad slot. Renders only for ad-eligible plans (server decides via GET /v1/ads).
@@ -93,6 +94,6 @@ export function MobileAnchorAd({ show }: { show: boolean }) {
   if (!show || dismissed) return null;
   return <div className="fixed inset-x-0 bottom-0 z-40 mx-auto flex h-[50px] max-w-[320px] items-center justify-between border border-line bg-surface px-3 shadow-card sm:hidden" aria-label="Advertisement">
     <a href="/pricing" className="text-xs font-semibold text-primary">Go ad-free with Pro</a>
-    <button onClick={() => setDismissed(true)} aria-label="Dismiss ad" className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft">✕</button>
+    <button onClick={() => setDismissed(true)} aria-label="Dismiss ad" className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft"><X className="h-5 w-5" /></button>
   </div>;
 }

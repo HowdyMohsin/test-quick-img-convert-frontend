@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import type { FormatInfo } from '@/lib/catalog';
 import { CATEGORIES } from '@/lib/catalog';
 
@@ -56,7 +57,7 @@ export function Combobox({ label, placeholder, options, value, onChange, disable
         onKeyDown={onKeyDown}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         className="min-h-[48px] w-full rounded-card border border-line bg-surface px-3.5 pr-10 text-sm text-ink placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:bg-soft disabled:text-muted" />
-      <span aria-hidden className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted">▾</span>
+      <ChevronDown aria-hidden className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
     </div>
     {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
     {open && !disabled && (

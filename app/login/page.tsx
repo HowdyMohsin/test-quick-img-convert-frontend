@@ -57,11 +57,11 @@ function LoginInner() {
     setLoading(true);
     try {
       if (tab === 'register') {
-        await apiFetch('/v1/auth/register', { method: 'POST', body: { display_name: name.trim(), email: email.trim(), password } });
+        await apiFetch('/v1/auth/register', { method: 'POST', body: { name: name.trim(), email: email.trim(), password, terms_accepted: terms, remember_me: remember } });
         setRegistered(true);
         setResendCooldown(60);
       } else {
-        await apiFetch('/v1/auth/login', { method: 'POST', body: { email: email.trim(), password, remember } });
+        await apiFetch('/v1/auth/login', { method: 'POST', body: { email: email.trim(), password, remember_me: remember } });
         const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/account';
         router.push(safeNext);
         router.refresh();

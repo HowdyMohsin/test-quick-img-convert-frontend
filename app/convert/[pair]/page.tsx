@@ -5,9 +5,9 @@ import { brand, pageTitle } from '@/lib/brand';
 import { getCatalog, resolveAlias, formatBySlug } from '@/lib/catalog';
 import { pairDescription, pairFaqs, pairUseCases, pairProblems } from '@/lib/pair-copy';
 import { ConverterTool } from '@/components/ConverterTool';
-import { HeroPicker } from '@/components/HeroPicker';
 import { AdFrame } from '@/components/AdFrame';
 import { Accordion, Card, EmptyState } from '@/components/ui';
+import { Check } from 'lucide-react';
 
 export const revalidate = 3600;
 
@@ -76,11 +76,6 @@ export default async function ConvertPage({ params }: { params: { pair: string }
       <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">{from.label} to {to.label} Converter</h1>
       <p className="mt-2 max-w-3xl text-muted">{pairDescription(from, to)}</p>
 
-      <div className="mt-6 rounded-card-lg border border-line bg-surface p-4 shadow-card">
-        <p className="mb-3 text-xs font-bold uppercase tracking-wide text-muted">Change converter</p>
-        <HeroPicker catalog={catalog} />
-      </div>
-
       <div className="mt-6">
         {isHealthy ? (
           <ConverterTool from={from} to={to} catalog={catalog} />
@@ -103,7 +98,7 @@ export default async function ConvertPage({ params }: { params: { pair: string }
       <div className="mx-auto mt-4 grid max-w-4xl gap-3 text-center sm:grid-cols-3">
         {['Files auto-delete after 24 hours', 'Secure HTTPS upload', 'No account needed for 5 conversions a day'].map((t) => (
           <div key={t} className="flex items-center justify-center gap-2 rounded-card border border-line bg-surface px-3 py-2.5 text-sm font-medium text-ink">
-            <span aria-hidden className="text-success">✓</span> {t}
+            <Check className="h-4 w-4 shrink-0 text-success" aria-hidden /> {t}
           </div>
         ))}
       </div>

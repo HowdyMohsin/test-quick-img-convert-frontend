@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { brand } from '@/lib/brand';
 import { apiFetch, fetchMe, type MeResponse } from '@/lib/api';
 import { Badge, Drawer, Button } from './ui';
+import { Bell, X } from 'lucide-react';
 
 export function useMe() {
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -71,7 +72,7 @@ export function Header({ me, onSignOut }: { me: MeResponse | null; onSignOut?: (
           <>
             <button onClick={() => setBellOpen(true)} aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}
               className="relative flex h-11 w-11 items-center justify-center rounded-full text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-              <span aria-hidden className="text-lg">🔔</span>
+              <Bell className="h-5 w-5" aria-hidden />
               {unread > 0 && <span className="absolute right-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-[11px] font-bold text-white">{unread}</span>}
             </button>
             <div className="relative">
@@ -125,6 +126,6 @@ export function AnnouncementBar({ text }: { text?: string | null }) {
   if (!text || dismissed) return null;
   return <div className="bg-primary px-4 py-2 text-center text-sm font-medium text-white">
     <span>{text}</span>
-    <button onClick={() => setDismissed(true)} aria-label="Dismiss announcement" className="ml-3 rounded px-2 py-0.5 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">✕</button>
+    <button onClick={() => setDismissed(true)} aria-label="Dismiss announcement" className="ml-3 inline-flex items-center justify-center rounded px-2 py-0.5 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><X className="h-4 w-4" /></button>
   </div>;
 }
