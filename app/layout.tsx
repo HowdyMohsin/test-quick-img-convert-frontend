@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Raleway } from 'next/font/google';
 import './globals.css';
 import { brand } from '@/lib/brand';
 import { SiteChrome } from '@/components/SiteChrome';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+// Raleway is used by the auth card design only (login / forgot / reset).
+const raleway = Raleway({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'], variable: '--font-raleway', display: 'swap' });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
@@ -19,7 +21,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${raleway.variable}`}>
       <head>
         <link rel="icon" type="image/svg+xml" href="/logo-mark.svg" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />

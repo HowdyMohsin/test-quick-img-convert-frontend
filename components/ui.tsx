@@ -271,7 +271,7 @@ export function Accordion({ items }: { items: { q: string; a: string }[] }) {
 
 export function passwordStrength(pw: string): { score: number; label: string } {
   let s = 0;
-  if (pw.length >= 10) s++;
+  if (pw.length >= 8) s++;
   if (pw.length >= 14) s++;
   if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) s++;
   if (/\d/.test(pw)) s++;

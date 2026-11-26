@@ -373,7 +373,7 @@ function AccountInner() {
               <div className="mt-3 space-y-3">
                 <PasswordField label="Current password" id="current-password" autoComplete="current-password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} />
                 <PasswordField label="New password" id="new-password" autoComplete="new-password" value={newPw} onChange={(e) => setNewPw(e.target.value)} showStrength />
-                <Button onClick={changePassword} disabled={!currentPw || newPw.length < 10}>Change password</Button>
+                <Button onClick={changePassword} disabled={!currentPw || newPw.length < 8}>Change password</Button>
                 <p className="text-xs text-muted">Changing your password signs out all other sessions.</p>
               </div>
             </Card>

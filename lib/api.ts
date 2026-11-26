@@ -39,6 +39,7 @@ const CODE_MESSAGES: Record<string, string> = {
   account_banned: 'This account is banned. Contact support for help.',
   feature_locked: 'This feature needs Basic or Pro — see the pricing page to upgrade.',
   signin_required: 'Sign in — it’s free — to convert your files.',
+  account_not_found: 'No account exists for that e-mail address.',
   not_found: 'That file could not be found — please upload it again.',
   rate_limited: 'Too many requests — please wait a moment and try again.',
 };
