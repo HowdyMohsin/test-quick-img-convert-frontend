@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { brand } from '@/lib/brand';
-import { Button, Card, Input, Select, Textarea } from '@/components/ui';
+import { Button, Card, Container, Input, Select, Textarea } from '@/components/ui';
 
 export default function ContactPage() {
   const [name, setName] = useState('');
@@ -26,7 +26,7 @@ export default function ContactPage() {
     } catch (err: any) { setError(err?.message || 'Could not send your message.'); }
     finally { setLoading(false); }
   };
-  return <div className="mx-auto max-w-2xl px-4 py-10">
+  return <Container className="py-10"><div className="mx-auto max-w-2xl">
     <h1 className="text-3xl font-extrabold text-ink">Contact us</h1>
     <p className="mt-2 text-muted">Questions, problems, or feedback — we read every message. You can also email us directly at <a className="font-semibold text-primary" href={`mailto:${brand.supportEmail}`}>{brand.supportEmail}</a>.</p>
     <Card className="mt-6 p-6">
@@ -49,5 +49,6 @@ export default function ContactPage() {
         </form>
       )}
     </Card>
-  </div>;
+  </div>
+  </Container>;
 }

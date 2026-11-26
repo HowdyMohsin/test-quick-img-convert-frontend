@@ -3,7 +3,7 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch, fetchMe, fetchNotifications, formatBytes, toArray, type MeResponse } from '@/lib/api';
-import { Badge, Button, Card, Input, Modal, PasswordField, Progress, Select, Switch, Tabs, Toast } from '@/components/ui';
+import { Badge, Button, Card, Container, Input, Modal, PasswordField, Progress, Select, Switch, Tabs, Toast } from '@/components/ui';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const TABS = [
@@ -168,7 +168,7 @@ function AccountInner() {
     router.refresh();
   };
 
-  if (loading) return <div className="mx-auto max-w-7xl px-4 py-10"><p className="text-muted">Loading your account…</p></div>;
+  if (loading) return <Container className="py-10"><p className="text-muted">Loading your account…</p></Container>;
   if (!user) return null;
 
   // History rows are normalized before render: a null item, a field of
@@ -204,7 +204,7 @@ function AccountInner() {
     return !Number.isNaN(t) && t < Date.now();
   };
 
-  return <div className="mx-auto max-w-7xl px-4 py-10">
+  return <Container className="py-10">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h1 className="text-3xl font-extrabold text-ink">My account</h1>
       <Button variant="secondary" onClick={signOut} loading={signingOut}>{signingOut ? 'Signing out…' : 'Sign out'}</Button>
@@ -445,9 +445,9 @@ function AccountInner() {
       <div className="mt-5 flex gap-2"><Button variant="danger" onClick={deleteAccount} disabled={deleteTyped !== 'DELETE' || !deletePw}>Delete my account</Button><Button variant="secondary" onClick={() => setDeleteConfirm(false)}>Cancel</Button></div>
     </Modal>
     {toast && <Toast message={toast} onClose={() => setToast(null)} />}
-  </div>;
+  </Container>;
 }
 
 export default function AccountPage() {
-  return <Suspense fallback={<div className="mx-auto max-w-7xl px-4 py-10 text-muted">Loading…</div>}><AccountInner /></Suspense>;
+  return <Suspense fallback={<Container className="py-10 text-muted">Loading…</Container>}><AccountInner /></Suspense>;
 }

@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { brand } from '@/lib/brand';
+import { Container } from '@/components/ui';
 export const metadata: Metadata = { title: 'Privacy Policy', description: `Privacy Policy for ${brand.name}.` };
 export default function PrivacyPolicyPage() {
-  return <article className="mx-auto max-w-3xl px-4 py-10 prose prose-slate">
+  return <Container as="article" className="py-10 prose prose-slate"><div className="mx-auto max-w-3xl">
     <h1 className="text-3xl font-extrabold text-ink">Privacy Policy</h1>
     <p className="mt-2 text-sm text-muted">Last updated: 24 November 2026. This policy explains what we collect, why, and what you can do about it. It should be reviewed by a qualified lawyer before launch.</p>
     <section className="mt-8 space-y-4 text-sm leading-relaxed text-muted">
@@ -25,5 +26,6 @@ export default function PrivacyPolicyPage() {
       <h2 className="text-lg font-bold text-ink">9. Contact</h2>
       <p>For privacy questions, email <a className="font-semibold text-primary" href={`mailto:${brand.supportEmail}`}>{brand.supportEmail}</a>.</p>
     </section>
-  </article>;
+  </div>
+  </Container>;
 }

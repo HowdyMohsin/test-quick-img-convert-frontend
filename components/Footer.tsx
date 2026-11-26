@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { brand } from '@/lib/brand';
+import { Container } from './ui';
 import { localCatalog } from '@/lib/catalog';
 
 const popular = ['png-to-jpg', 'jpg-to-png', 'heic-to-jpg', 'pdf-to-png', 'mp4-to-mp3', 'webp-to-jpg', 'svg-to-png', 'mp3-to-wav'];
 
 export function Footer() {
   return <footer className="border-t border-line bg-soft/60">
-    <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
+    <Container className="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
       <div>
         <img src={brand.logo} alt={brand.name} className="h-8 w-auto" />
         <p className="mt-3 max-w-xs text-sm text-muted">{brand.tagline}</p>
@@ -29,7 +30,6 @@ export function Footer() {
           <li><Link className="text-muted hover:text-primary" href="/pricing">Pricing</Link></li>
           <li><Link className="text-muted hover:text-primary" href="/account">Account</Link></li>
           <li><Link className="text-muted hover:text-primary" href="/contact">Contact</Link></li>
-          <li><Link className="text-muted hover:text-primary" href="/status">API Status</Link></li>
         </ul>
       </div>
       <div>
@@ -41,7 +41,7 @@ export function Footer() {
         </ul>
         <p className="mt-4 text-sm text-muted">Support: <a className="font-semibold text-primary" href={`mailto:${brand.supportEmail}`}>{brand.supportEmail}</a></p>
       </div>
-    </div>
+    </Container>
     <div className="border-t border-line py-4 text-center text-xs text-muted">© {new Date().getFullYear()} {brand.name}. Files are deleted automatically after 24 hours.</div>
   </footer>;
 }

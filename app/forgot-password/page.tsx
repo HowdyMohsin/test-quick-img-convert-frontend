@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { apiFetch } from '@/lib/api';
-import { Button, Card, Input } from '@/components/ui';
+import { Button, Card, Container, Input } from '@/components/ui';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -16,7 +16,7 @@ export default function ForgotPasswordPage() {
     catch (err: any) { setError(err?.message || 'Something went wrong.'); }
     finally { setLoading(false); }
   };
-  return <div className="mx-auto max-w-md px-4 py-12">
+  return <Container className="py-12"><div className="mx-auto max-w-md">
     <Card className="p-6 sm:p-8">
       <h1 className="text-2xl font-extrabold text-ink">Forgot your password?</h1>
       {sent ? (
@@ -29,5 +29,6 @@ export default function ForgotPasswordPage() {
         </form>
       )}
     </Card>
-  </div>;
+  </div>
+  </Container>;
 }

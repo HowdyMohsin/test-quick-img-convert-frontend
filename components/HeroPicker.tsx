@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftRight, Upload, X } from 'lucide-react';
 import { Combobox, formatOptions } from './Combobox';
+import { CategoryBar } from './CategoryBar';
 import { FileThumb } from './ui';
 import type { Catalog } from '@/lib/catalog';
 import { apiFetch, formatBytes, friendlyErrorMessage } from '@/lib/api';
@@ -39,10 +40,14 @@ function thumbKindFor(catalog: Catalog, slug: string): 'image' | 'audio' | 'vide
   return 'file';
 }
 
-export function HeroPicker({ catalog, showUploadBox = false, layout = 'default', initialFrom = null, initialTo = null, lockedFrom = false }: { catalog: Catalog; showUploadBox?: boolean; layout?: 'default' | 'side'; initialFrom?: string | null; initialTo?: string | null; lockedFrom?: boolean }) {
+export function HeroPicker({ catalog, showUploadBox = false, layout = 'default', initialFrom = null, initialTo = null, lockedFrom = false }: { catalog: Catalog; showUploadBox?: boolean; layout?: 'default' | 'bar'; initialFrom?: string | null; initialTo?: string | null; lockedFrom?: boolean }) {
   const router = useRouter();
   const [from, setFrom] = useState<string | null>(initialFrom);
   const [to, setTo] = useState<string | null>(initialTo);
+  // Category pill bar (home layout only): filters both dropdowns to one
+  // category. 'All' shows every format. The pair-page bar never
+  // shows it — its pair is fixed.
+  const [catFilter, setCatFilter] = useState<string>('All');
   const [detectNote, setDetectNote] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [staged, setStaged] = useState<StagedFile[]>([]);
@@ -60,7 +65,7 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
     return set;
   }, [catalog]);
 
-  // Home layout only: restore the last-used pair. The side box always shows
+  // Home layout only: restore the last-used pair. The bar always shows
   // the pair of the page it sits on (initialFrom / initialTo).
   useEffect(() => {
     if (layout !== 'default') return;
@@ -75,17 +80,30 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
 
   // Convert-from rows show the popular targets (JPG → WEBP PNG AVIF);
   // Convert-to rows keep the plain badge (no targets map passed).
-  const fromOptions = useMemo(() => formatOptions(catalog.formats.filter((f) => catalog.targetsByInput[f.slug]?.length), catalog.targetsByInput), [catalog]);
+  // Both lists are filtered to the chosen category ('All' = everything).
+  const fromOptions = useMemo(() => formatOptions(
+    catalog.formats.filter((f) => catalog.targetsByInput[f.slug]?.length && (catFilter === 'All' || f.category === catFilter)),
+    catalog.targetsByInput), [catalog, catFilter]);
   const toOptions = useMemo(() => {
     if (!from) return [];
     const targets = catalog.targetsByInput[from] || [];
-    return formatOptions(catalog.formats.filter((f) => targets.includes(f.slug)), undefined, catalog.inputsByTarget);
-  }, [catalog, from]);
+    return formatOptions(catalog.formats.filter((f) => targets.includes(f.slug) && (catFilter === 'All' || f.category === catFilter)), undefined, catalog.inputsByTarget);
+  }, [catalog, from, catFilter]);
 
   const onFrom = (v: string | null) => {
     setFrom(v);
     if (v && to && !(catalog.targetsByInput[v] || []).includes(to)) setTo(null);
     if (!v) setTo(null);
+  };
+  // Switching category clears any selected format that does not belong
+  // to it, so the dropdowns can never show a value outside the filter.
+  const onCategory = (c: string) => {
+    setCatFilter(c);
+    if (c === 'All') return;
+    const fromCat = from ? catalog.formats.find((f) => f.slug === from)?.category : null;
+    if (from && fromCat !== c) { setFrom(null); setTo(null); return; }
+    const toCat = to ? catalog.formats.find((f) => f.slug === to)?.category : null;
+    if (to && toCat !== c) setTo(null);
   };
   const reverseExists = from && to ? (catalog.targetsByInput[to] || []).includes(from) : false;
   const swap = () => { if (reverseExists && from && to) { setFrom(to); setTo(from); } };
@@ -173,6 +191,9 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
     if (firstGood) {
       const match = catalog.formats.find((f) => f.slug === firstGood.detected)!;
       onFrom(firstGood.detected);
+      // The bar follows the detected file: a dropped MP3 switches the
+      // category to Audio, so the bar and the locked "from" never disagree.
+      setCatFilter(match.category);
       setDetectNote(`Detected: ${match.label} — now choose the format to convert to`);
     }
   };
@@ -196,6 +217,12 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
   const fromLocked = lockedFrom || staged.some((f) => f.status !== 'error');
 
   return <div className="rounded-card-xl border border-line bg-surface p-5 shadow-card sm:p-6">
+    {layout === 'default' && (
+      <div className="mb-5">
+        <CategoryBar value={catFilter} onChange={onCategory} disabled={fromLocked} />
+        {catFilter !== 'All' && <p className="mt-2 text-xs text-muted">Showing {catFilter} formats — pick “All” to see every format.</p>}
+      </div>
+    )}
     {showUploadBox && (
       <div className="mb-5">
         <div
@@ -207,7 +234,7 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
           onDrop={(e) => { e.preventDefault(); setDragOver(false); void uploadFiles(Array.from(e.dataTransfer.files || [])); }}
           className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-card border-2 border-dashed px-4 py-5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${dragOver ? 'border-primary bg-indigo-50' : 'border-line bg-soft/40 hover:border-primary/50'}`}>
           <Upload className="h-7 w-7 text-muted" aria-hidden />
-          <p className="text-sm font-bold text-ink">Drop files here to detect their format</p>
+          <p className="text-sm font-bold text-ink">{catFilter === 'All' ? 'Drop files here to detect their format' : `Drop ${catFilter} files here to detect their format`}</p>
           <p className="text-xs text-muted">You can drop several files at once — or <span className="font-semibold text-primary underline">browse your files</span></p>
           <input ref={detectInputRef} type="file" multiple className="hidden" aria-hidden
             onChange={(e) => { void uploadFiles(Array.from(e.target.files || [])); e.target.value = ''; }} />
@@ -232,14 +259,20 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
         {detectNote && <p className="mt-2 text-center text-sm font-semibold text-success" role="status">{detectNote}</p>}
       </div>
     )}
-    {layout === 'side' ? (
-      <div className="flex flex-col gap-3">
+    {layout === 'bar' ? (
+      <div className="grid items-end gap-3 sm:grid-cols-[1fr_auto_1fr_auto]">
         <Combobox id="hero-from" label="Convert from" placeholder="Choose a format…" options={fromOptions} value={from} onChange={onFrom} locked={fromLocked} />
-        <button type="button" onClick={swap} disabled={!reverseExists} aria-label="Swap formats" title={reverseExists ? 'Swap formats' : 'Reverse conversion is not available'}
-          className="flex min-h-[40px] w-full items-center justify-center gap-2 rounded-card border border-line bg-surface text-sm font-semibold text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40">
-          <ArrowLeftRight className="h-4 w-4" /> Swap
-        </button>
+        <div className="flex justify-center pb-1">
+          <button type="button" onClick={swap} disabled={!reverseExists} aria-label="Swap formats" title={reverseExists ? 'Swap formats' : 'Reverse conversion is not available'}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40">
+            <ArrowLeftRight className="h-5 w-5" />
+          </button>
+        </div>
         <Combobox id="hero-to" label="Convert to" placeholder={from ? 'Choose a format…' : 'Choose “from” first'} options={toOptions} value={to} onChange={setTo} disabled={!from} />
+        <button type="button" onClick={() => router.push(pairUrl)} disabled={!from || !to}
+          className="flex min-h-[48px] items-center justify-center whitespace-nowrap rounded-card bg-primary px-5 text-sm font-bold text-white hover:bg-primaryDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+          Go to converter
+        </button>
       </div>
     ) : (
       <div className="grid items-end gap-4 sm:grid-cols-[1fr_auto_1fr]">
@@ -258,25 +291,22 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
         {fromLabel} → {toLabel} · {category} converter
       </p>
     )}
+    {/* The bar layout carries its own "Go to converter" button in the
+        row above, so no bottom button is rendered for it. */}
+    {layout !== 'bar' && (
     <div className="mt-4">
       {from && to ? (
-        layout === 'side' ? (
-          <button type="button" onClick={() => router.push(pairUrl)}
-            className="flex min-h-[48px] w-full items-center justify-center rounded-card bg-primary px-5 py-3 text-base font-bold text-white hover:bg-primaryDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-            Go to converter
-          </button>
-        ) : (
-          <a href={pairUrl} target="_blank" rel="noopener" aria-label="Start converting — opens in a new tab"
-            className="flex min-h-[48px] w-full items-center justify-center rounded-card bg-primary px-5 py-3 text-base font-bold text-white hover:bg-primaryDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-            Start converting <span className="ml-2 text-xs font-medium opacity-80">(opens in a new tab)</span>
-          </a>
-        )
+        <a href={pairUrl} target="_blank" rel="noopener" aria-label="Start converting — opens in a new tab"
+          className="flex min-h-[48px] w-full items-center justify-center rounded-card bg-primary px-5 py-3 text-base font-bold text-white hover:bg-primaryDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+          Start converting <span className="ml-2 text-xs font-medium opacity-80">(opens in a new tab)</span>
+        </a>
       ) : (
         <button disabled aria-disabled="true" className="min-h-[48px] w-full cursor-not-allowed rounded-card bg-primary/50 px-5 py-3 text-base font-bold text-white">
-          {layout === 'side' ? 'Go to converter' : 'Start converting'}
+          Start converting
         </button>
       )}
     </div>
+    )}
     {layout === 'default' && <p className="mt-3 text-center text-xs text-muted">No account needed for 5 conversions a day · Files auto-delete after 24 hours</p>}
   </div>;
 }

@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { localCatalog } from '@/lib/catalog';
 import { HeroPicker } from '@/components/HeroPicker';
+import { Container } from '@/components/ui';
 
 const popular = ['png-to-jpg', 'jpg-to-png', 'heic-to-jpg', 'pdf-to-png', 'mp4-to-mp3', 'webp-to-jpg'];
 
 export default function NotFound() {
-  return <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+  return <Container className="py-16 text-center"><div className="mx-auto max-w-3xl">
     <h1 className="text-4xl font-extrabold text-ink">Page not found</h1>
     <p className="mt-2 text-muted">That page does not exist — but the converter you need probably does. Pick your formats below.</p>
     <div className="mt-8 text-left"><HeroPicker catalog={localCatalog} /></div>
@@ -19,5 +20,6 @@ export default function NotFound() {
       })}
     </div>
     <p className="mt-8"><Link href="/" className="font-semibold text-primary underline">Back to home</Link></p>
-  </div>;
+  </div>
+  </Container>;
 }

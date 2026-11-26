@@ -3,7 +3,7 @@ import React, { Suspense, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
-import { Button, Card, PasswordField } from '@/components/ui';
+import { Button, Card, Container, PasswordField } from '@/components/ui';
 
 function ResetInner() {
   const params = useSearchParams();
@@ -27,7 +27,7 @@ function ResetInner() {
       else setError(err?.message || 'Something went wrong.');
     } finally { setLoading(false); }
   };
-  return <div className="mx-auto max-w-md px-4 py-12">
+  return <Container className="py-12"><div className="mx-auto max-w-md">
     <Card className="p-6 sm:p-8">
       <h1 className="text-2xl font-extrabold text-ink">Reset your password</h1>
       {done ? (
@@ -47,8 +47,9 @@ function ResetInner() {
         </form>
       )}
     </Card>
-  </div>;
+  </div>
+  </Container>;
 }
 export default function ResetPasswordPage() {
-  return <Suspense fallback={<div className="mx-auto max-w-md px-4 py-12 text-muted">Loading…</div>}><ResetInner /></Suspense>;
+  return <Suspense fallback={<Container className="py-12"><div className="mx-auto max-w-md text-muted">Loading…</div></Container>}><ResetInner /></Suspense>;
 }

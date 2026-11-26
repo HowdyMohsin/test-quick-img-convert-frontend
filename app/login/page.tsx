@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch, fetchMe } from '@/lib/api';
 import { brand } from '@/lib/brand';
-import { Button, Card, Input, PasswordField, Tabs, Toast } from '@/components/ui';
+import { Button, Card, Container, Input, PasswordField, Tabs, Toast } from '@/components/ui';
 import { Captcha } from '@/components/Captcha';
 import { Check } from 'lucide-react';
 
@@ -20,7 +20,7 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
     '25 free conversions every day',
     'Fast, free and private — no watermarks',
   ];
-  return <div className="mx-auto grid w-full max-w-7xl lg:min-h-[calc(100vh-4rem)] lg:grid-cols-2">
+  return <Container className="grid w-full lg:min-h-[calc(100vh-4rem)] lg:grid-cols-2">
     <div className="hidden flex-col justify-between bg-gradient-to-br from-[#4F46E5] via-[#4338CA] to-[#1E1B4B] px-10 py-12 text-white lg:flex">
       <div>
         <div className="flex items-center gap-3">
@@ -43,7 +43,7 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
     <div className="flex items-center justify-center px-4 py-10 sm:py-14">
       <div className="w-full max-w-md">{children}</div>
     </div>
-  </div>;
+  </Container>;
 }
 
 function LoginInner() {
@@ -301,5 +301,5 @@ function LoginInner() {
 }
 
 export default function LoginPage() {
-  return <Suspense fallback={<div className="mx-auto max-w-md px-4 py-12 text-muted">Loading…</div>}><LoginInner /></Suspense>;
+  return <Suspense fallback={<Container className="py-12"><div className="mx-auto max-w-md text-muted">Loading…</div></Container>}><LoginInner /></Suspense>;
 }

@@ -5,7 +5,7 @@ import { getCatalog } from '@/lib/catalog';
 import { HeroPicker } from '@/components/HeroPicker';
 import { AllFormats } from '@/components/AllFormats';
 import { AdFrame } from '@/components/AdFrame';
-import { Accordion, Card } from '@/components/ui';
+import { Accordion, Card, Container } from '@/components/ui';
 import { Check } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -33,7 +33,7 @@ export default async function HomePage() {
   };
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
-    <section className="mx-auto max-w-7xl px-4 pt-10 sm:pt-14">
+    <Container as="section" className="pt-10 sm:pt-14">
       <div className="mx-auto max-w-3xl text-center">
         <h1 className="text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">{brand.homeH1}</h1>
         <p className="mt-3 text-lg text-muted">{brand.tagline}</p>
@@ -46,15 +46,15 @@ export default async function HomePage() {
           </div>
         ))}
       </div>
-    </section>
+    </Container>
     <AdFrame slot="home_top" />
-    <section id="formats" className="mx-auto max-w-7xl scroll-mt-20 px-4 py-10">
+    <Container as="section" id="formats" className="scroll-mt-20 py-10">
       <h2 className="text-2xl font-extrabold text-ink sm:text-3xl">All formats</h2>
       <p className="mt-2 text-muted">Every converter we offer — pick a format to see where it converts to.</p>
       <div className="mt-6"><AllFormats catalog={catalog} /></div>
-    </section>
+    </Container>
     <AdFrame slot="home_mid" />
-    <section className="mx-auto max-w-7xl px-4 py-10">
+    <Container as="section" className="py-10">
       <h2 className="text-2xl font-extrabold text-ink sm:text-3xl">How it works</h2>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         {[
@@ -69,8 +69,8 @@ export default async function HomePage() {
           </Card>
         ))}
       </div>
-    </section>
-    <section className="mx-auto max-w-7xl px-4 py-10">
+    </Container>
+    <Container as="section" className="py-10">
       <h2 className="text-2xl font-extrabold text-ink sm:text-3xl">Why use {brand.name}?</h2>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
@@ -82,18 +82,20 @@ export default async function HomePage() {
           <Card key={f.t} className="p-5"><h3 className="text-base font-bold text-ink">{f.t}</h3><p className="mt-1 text-sm text-muted">{f.b}</p></Card>
         ))}
       </div>
-    </section>
-    <section className="mx-auto max-w-4xl px-4 py-10">
+    </Container>
+    <Container as="section" className="py-10">
+      <div className="mx-auto max-w-4xl">
       <h2 className="text-2xl font-extrabold text-ink sm:text-3xl">Frequently asked questions</h2>
       <div className="mt-6"><Accordion items={FAQ} /></div>
-    </section>
+      </div>
+    </Container>
     <AdFrame slot="home_bottom" />
-    <section className="mx-auto max-w-7xl px-4 pb-14">
+    <Container as="section" className="pb-14">
       <div className="rounded-card-xl bg-primary px-6 py-10 text-center text-white">
         <h2 className="text-2xl font-extrabold sm:text-3xl">Convert more, with no ads</h2>
         <p className="mx-auto mt-2 max-w-xl text-indigo-100">Pro gives you 2,000 conversions a day, 100 files per batch, priority processing, and an ad-free experience.</p>
         <Link href="/pricing" className="mt-6 inline-flex min-h-[48px] items-center rounded-card bg-white px-6 text-sm font-bold text-primary hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">See pricing</Link>
       </div>
-    </section>
+    </Container>
   </>;
 }

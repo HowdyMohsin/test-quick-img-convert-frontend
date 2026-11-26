@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import EditorClient from './EditorClient';
+import { Container } from '@/components/ui';
 
 export const metadata: Metadata = {
   title: 'Image editor | Quick IMG Convert',
@@ -13,11 +14,11 @@ export default function EditorPage() {
   return (
     <Suspense
       fallback={
-        <div className="mx-auto max-w-7xl px-4 py-8">
+        <Container className="py-8">
           <div className="animate-pulse rounded-card-lg border border-line bg-soft p-8 text-center text-sm text-muted">
             Loading editor…
           </div>
-        </div>
+        </Container>
       }
     >
       <EditorClient />

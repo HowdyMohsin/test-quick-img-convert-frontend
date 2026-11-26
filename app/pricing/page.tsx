@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { apiFetch, fetchMe, type MeResponse } from '@/lib/api';
 import { brand } from '@/lib/brand';
-import { Button, Card, CopyField, Input, Modal, Segmented, Toast, Accordion, Badge } from '@/components/ui';
+import { Button, Card, Container, CopyField, Input, Modal, Segmented, Toast, Accordion, Badge } from '@/components/ui';
 import { Check } from 'lucide-react';
 import { Suspense } from 'react';
 
@@ -146,7 +146,7 @@ function PricingInner() {
     { id: 'pro', name: 'Pro', price_cents: 900, price_yearly_cents: 9000, limits: { daily: 2000, batch: 100, img_mb: 2048, ads: false } },
   ];
 
-  return <div className="mx-auto max-w-7xl px-4 py-10">
+  return <Container className="py-10">
     <div className="text-center">
       <h1 className="text-3xl font-extrabold text-ink sm:text-4xl">Pricing</h1>
       <p className="mx-auto mt-2 max-w-xl text-muted">Start free. Upgrade when you need more conversions, bigger files, and no ads.</p>
@@ -262,9 +262,9 @@ function PricingInner() {
       </div>
     </Modal>
     {toast && <Toast message={toast} onClose={() => setToast(null)} />}
-  </div>;
+  </Container>;
 }
 
 export default function PricingPage() {
-  return <Suspense fallback={<div className="mx-auto max-w-7xl px-4 py-10 text-muted">Loading pricing…</div>}><PricingInner /></Suspense>;
+  return <Suspense fallback={<Container className="py-10 text-muted">Loading pricing…</Container>}><PricingInner /></Suspense>;
 }

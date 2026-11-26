@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Button } from './ui';
+import { Button, Container } from './ui';
 
 // Friendly fallback for a client-side render exception: the user sees a
 // human message and a Reload button — never Next.js's raw "Application
@@ -26,13 +26,13 @@ export class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="mx-auto max-w-7xl px-4 py-10 text-center">
+        <Container className="py-10 text-center">
           <h2 className="text-xl font-bold text-ink">{this.props.title || 'Something went wrong'}</h2>
           <p className="mt-2 text-sm text-muted">Please reload the page and try again.</p>
           <div className="mt-4 flex justify-center gap-2">
             <Button onClick={() => window.location.reload()}>Reload page</Button>
           </div>
-        </div>
+        </Container>
       );
     }
     return this.props.children;

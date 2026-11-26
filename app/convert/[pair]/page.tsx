@@ -6,7 +6,7 @@ import { getCatalog, resolveAlias, formatBySlug } from '@/lib/catalog';
 import { pairDescription, pairFaqs, pairUseCases, pairProblems } from '@/lib/pair-copy';
 import { ConverterTool } from '@/components/ConverterTool';
 import { AdFrame } from '@/components/AdFrame';
-import { Accordion, Card, EmptyState } from '@/components/ui';
+import { Accordion, Card, Container, EmptyState } from '@/components/ui';
 import { Check } from 'lucide-react';
 
 export const revalidate = 3600;
@@ -67,20 +67,22 @@ export default async function ConvertPage({ params }: { params: { pair: string }
 
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-    <div className="mx-auto max-w-7xl px-4 py-8">
+    <Container className="py-8">
       <nav aria-label="Breadcrumb" className="text-sm text-muted">
         <Link href="/" className="hover:text-primary">Home</Link> <span aria-hidden>›</span>{' '}
         <Link href="/#formats" className="hover:text-primary">Converters</Link> <span aria-hidden>›</span>{' '}
         <span className="font-semibold text-ink">{from.label} to {to.label}</span>
       </nav>
-      <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">{from.label} to {to.label} Converter</h1>
-      <p className="mt-2 max-w-3xl text-muted">{pairDescription(from, to)}</p>
-
+      {/* The title + description live at the top of the tool card itself
+          (ConverterTool renders them), not as a separate distant header. */}
       <div className="mt-6">
         {isHealthy ? (
           <ConverterTool from={from} to={to} catalog={catalog} />
         ) : (
-          <Card className="p-6">
+          <>
+            <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">{from.label} to {to.label} Converter</h1>
+            <p className="mt-2 max-w-3xl text-muted">{pairDescription(from, to)}</p>
+            <Card className="mt-6 p-6">
             <EmptyState title="This converter is temporarily unavailable"
               body={`The ${from.label} to ${to.label} converter is paused right now. These working converters may help instead:`}
               action={<div className="flex flex-wrap justify-center gap-2">
@@ -90,6 +92,7 @@ export default async function ConvertPage({ params }: { params: { pair: string }
                 })}
               </div>} />
           </Card>
+          </>
         )}
       </div>
 
@@ -221,6 +224,6 @@ export default async function ConvertPage({ params }: { params: { pair: string }
           <Link href="/login?mode=register" className="mt-6 inline-flex min-h-[48px] items-center rounded-card bg-white px-6 text-sm font-bold text-primary hover:bg-indigo-50">Create a free account</Link>
         </div>
       </section>
-    </div>
+    </Container>
   </>;
 }

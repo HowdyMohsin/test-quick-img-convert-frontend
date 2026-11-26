@@ -86,6 +86,16 @@ export function Card({ children, className = '' }: { children: React.ReactNode; 
   return <div className={`rounded-card-lg border border-line bg-surface shadow-card ${className}`}>{children}</div>;
 }
 
+// One shared content width for the whole site: every page's outer shell
+// measures max-w-7xl (1280px) at desktop width, so the header, footer and
+// every page line up. Narrow content (auth forms, articles, hero text)
+// stays centered inside it with its own inner max-width — only the shell
+// is unified, never the inner reading width.
+export function Container({ children, className = '', as, id }: { children: React.ReactNode; className?: string; as?: 'div' | 'section' | 'article'; id?: string }) {
+  const Tag = as || 'div';
+  return <Tag id={id} className={`mx-auto w-full max-w-7xl px-4 ${className}`}>{children}</Tag>;
+}
+
 export function Skeleton({ className = '' }: { className?: string }) {
   return <div aria-hidden className={`animate-pulse rounded-card bg-soft ${className}`} />;
 }
@@ -196,7 +206,18 @@ export function Tooltip({ label, children }: { label: string; children: React.Re
 }
 
 // ---- Progress / Switch / Segmented / CopyField / Accordion / PasswordField ----
-export function Progress({ value, max = 100, label }: { value: number; max?: number; label?: string }) {
+// A null value renders an indeterminate bar (an animated segment, no
+// percentage): used while a job is queued/waiting, where no honest
+// percentage exists yet. Never show a made-up number.
+export function Progress({ value, max = 100, label }: { value: number | null; max?: number; label?: string }) {
+  if (value == null) {
+    return <div>
+      {label && <div className="mb-1 text-xs text-muted"><span>{label}</span></div>}
+      <div className="relative h-2 w-full overflow-hidden rounded-full bg-soft" role="progressbar" aria-label={label}>
+        <div className="absolute top-0 h-full w-2/5 animate-progress-slide rounded-full bg-primary" />
+      </div>
+    </div>;
+  }
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
   return <div>
     {label && <div className="mb-1 flex justify-between text-xs text-muted"><span>{label}</span><span>{Math.round(pct)}%</span></div>}

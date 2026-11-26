@@ -2,8 +2,8 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { Catalog } from '@/lib/catalog';
-import { CATEGORIES } from '@/lib/catalog';
-import { iconForCategory, iconForFormat } from '@/lib/formatIcons';
+import { iconForFormat } from '@/lib/formatIcons';
+import { CategoryBar } from './CategoryBar';
 import { Badge, EmptyState, Skeleton } from './ui';
 
 export function AllFormats({ catalog, loading }: { catalog: Catalog; loading?: boolean }) {
@@ -42,17 +42,7 @@ export function AllFormats({ catalog, loading }: { catalog: Catalog; loading?: b
 
   return <div>
     <div className="mb-4 flex flex-wrap items-center gap-2">
-      <div className="flex flex-wrap gap-1 rounded-card bg-soft p-1" role="tablist" aria-label="Format categories">
-        {['All', ...CATEGORIES].map((c) => {
-          const CatIcon = iconForCategory(c);
-          return (
-            <button key={c} role="tab" aria-selected={tab === c} onClick={() => setTab(c)}
-              className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${tab === c ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink'}`}>
-              <CatIcon className="h-4 w-4 shrink-0" aria-hidden />{c}
-            </button>
-          );
-        })}
-      </div>
+      <CategoryBar value={tab} onChange={setTab} />
       <div className="relative ml-auto w-full sm:w-72">
         <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search formats…" aria-label="Search formats"
           className="min-h-[44px] w-full rounded-card border border-line bg-surface px-3.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30" />

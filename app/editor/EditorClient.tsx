@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Button, Card, EmptyState } from '@/components/ui';
+import { Button, Card, Container, EmptyState } from '@/components/ui';
 import { Crop, Download, FlipHorizontal2, FlipVertical2, Image as ImageIcon, Lock, Pencil, Redo2, RotateCcw, RotateCw, Undo2 } from 'lucide-react';
 
 type Status = 'checking' | 'loading' | 'ready' | 'locked' | 'error' | 'empty';
@@ -485,19 +485,20 @@ export default function EditorClient() {
   // ---- States ----
   if (status === 'checking' || status === 'loading') {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <Container className="py-8">
         <h1 className="text-3xl font-extrabold tracking-tight text-ink">Image editor</h1>
         <div className="mt-6 flex flex-col items-center justify-center rounded-card-lg border border-line bg-surface p-12 text-center shadow-card">
           <span className="h-8 w-8 animate-spin rounded-full border-4 border-line border-t-primary" aria-hidden />
           <p className="mt-4 text-sm text-muted">{status === 'checking' ? 'Checking editor access…' : 'Loading your image…'}</p>
         </div>
-      </div>
+      </Container>
     );
   }
 
   if (status === 'locked') {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-8">
+      <Container className="py-8">
+        <div className="mx-auto max-w-3xl">
         <h1 className="text-3xl font-extrabold tracking-tight text-ink">Image editor</h1>
         <Card className="mt-6 p-8 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50" aria-hidden><Lock className="h-7 w-7 text-primary" /></div>
@@ -510,13 +511,15 @@ export default function EditorClient() {
             <Link href="/"><Button variant="secondary">Back to home</Button></Link>
           </div>
         </Card>
-      </div>
+        </div>
+      </Container>
     );
   }
 
   if (status === 'error') {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-8">
+      <Container className="py-8">
+        <div className="mx-auto max-w-3xl">
         <h1 className="text-3xl font-extrabold tracking-tight text-ink">Image editor</h1>
         <div className="mt-6">
           <EmptyState
@@ -525,13 +528,15 @@ export default function EditorClient() {
             action={<Link href="/"><Button>Back to home</Button></Link>}
           />
         </div>
-      </div>
+        </div>
+      </Container>
     );
   }
 
   if (status === 'empty') {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-8">
+      <Container className="py-8">
+        <div className="mx-auto max-w-3xl">
         <h1 className="text-3xl font-extrabold tracking-tight text-ink">Image editor</h1>
         <p className="mt-2 text-sm text-muted">Draw, crop, resize, rotate and adjust an image — everything runs in your browser.</p>
         <div
@@ -558,14 +563,15 @@ export default function EditorClient() {
           <Button className="mt-5" onClick={() => fileInputRef.current?.click()}>Choose an image</Button>
           <p className="mt-4 text-sm"><Link href="/" className="font-semibold text-primary hover:underline">Back to home</Link></p>
         </div>
-      </div>
+        </div>
+      </Container>
     );
   }
 
   // ---- Ready: the editor ----
   const adjustmentsChanged = JSON.stringify(adjust) !== JSON.stringify(DEFAULT_ADJUST);
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
+    <Container className="py-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-ink">Image editor</h1>
@@ -721,6 +727,6 @@ export default function EditorClient() {
           </p>
         </div>
       </div>
-    </div>
+    </Container>
   );
 }

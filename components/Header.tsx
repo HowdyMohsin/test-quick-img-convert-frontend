@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { brand } from '@/lib/brand';
 import { apiFetch, fetchMe, fetchNotifications, ME_REFRESH_EVENT, type MeResponse } from '@/lib/api';
-import { Badge, Drawer, Button } from './ui';
+import { Badge, Container, Drawer, Button } from './ui';
 import { Bell, X } from 'lucide-react';
 
 export function useMe() {
@@ -101,7 +101,7 @@ export function Header({ me, loaded, onSignOut }: { me: MeResponse | null; loade
   };
 
   return <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur">
-    <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4">
+    <Container className="flex h-16 items-center gap-4">
       <Link href="/" className="flex shrink-0 items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
         <img src={brand.logo} alt={`${brand.name} logo`} className="h-8 w-auto shrink-0" />
       </Link>
@@ -128,15 +128,17 @@ export function Header({ me, loaded, onSignOut }: { me: MeResponse | null; loade
           </>
         ) : (
           <>
-            <button onClick={openBell} aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}
-              className="relative flex h-11 w-11 items-center justify-center rounded-full text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-              <Bell className="h-5 w-5" aria-hidden />
-              {unread > 0 && <span className="absolute right-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-[11px] font-bold text-white">{unread}</span>}
-            </button>
             <div className="relative">
-              <button onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-haspopup="menu" aria-label="Account menu"
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-sm font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+              <button onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-haspopup="menu"
+                aria-label={unread > 0 ? `Account menu, ${unread} unread notification${unread === 1 ? '' : 's'}` : 'Account menu'}
+                className="relative flex h-11 w-11 items-center justify-center rounded-full bg-primary text-sm font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                 {(user.display_name || user.email || '?')[0].toUpperCase()}
+                {unread > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-danger px-1 text-[10px] font-bold text-white shadow" aria-hidden>
+                    <Bell className="h-3 w-3 animate-bell-ring" aria-hidden />
+                    {unread}
+                  </span>
+                )}
               </button>
               {menuOpen && (
                 <div role="menu" className="absolute right-0 mt-2 w-56 rounded-card-lg border border-line bg-surface py-1 shadow-card">
@@ -152,6 +154,14 @@ export function Header({ me, loaded, onSignOut }: { me: MeResponse | null; loade
                     <Link key={l.href} role="menuitem" href={l.href} onClick={() => setMenuOpen(false)}
                       className="block px-4 py-2.5 text-sm text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary">{l.label}</Link>
                   ))}
+                  {/* Notifications live here now, not as a separate header
+                      bell: opening this item shows the same drawer. */}
+                  <button role="menuitem" onClick={() => { setMenuOpen(false); openBell(); }}
+                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary">
+                    <Bell className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+                    Notifications
+                    {unread > 0 && <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold text-white">{unread}</span>}
+                  </button>
                   <button role="menuitem" onClick={signOut} disabled={signingOut} className="block w-full px-4 py-2.5 text-left text-sm text-danger hover:bg-soft disabled:opacity-50">{signingOut ? 'Signing out…' : 'Sign out'}</button>
                 </div>
               )}
@@ -159,7 +169,7 @@ export function Header({ me, loaded, onSignOut }: { me: MeResponse | null; loade
           </>
         )}
       </div>
-    </div>
+    </Container>
     <Drawer open={bellOpen} onClose={() => setBellOpen(false)} title="Notifications">
       {notificationsLoading && notifications.length === 0 ? (
         <p className="text-sm text-muted">Loading notifications…</p>

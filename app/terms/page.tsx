@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { brand } from '@/lib/brand';
+import { Container } from '@/components/ui';
 export const metadata: Metadata = { title: 'Terms of Service', description: `Terms of Service for ${brand.name}.` };
 export default function TermsPage() {
-  return <article className="mx-auto max-w-3xl px-4 py-10">
+  return <Container as="article" className="py-10"><div className="mx-auto max-w-3xl">
     <h1 className="text-3xl font-extrabold text-ink">Terms of Service</h1>
     <p className="mt-2 text-sm text-muted">Last updated: 24 November 2026. These terms should be reviewed by a qualified lawyer before launch.</p>
     <section className="mt-8 space-y-4 text-sm leading-relaxed text-muted">
@@ -23,5 +24,6 @@ export default function TermsPage() {
       <h2 className="text-lg font-bold text-ink">8. Governing law and contact</h2>
       <p>These terms are governed by the laws of Pakistan. Contact: <a className="font-semibold text-primary" href={`mailto:${brand.supportEmail}`}>{brand.supportEmail}</a>.</p>
     </section>
-  </article>;
+  </div>
+  </Container>;
 }

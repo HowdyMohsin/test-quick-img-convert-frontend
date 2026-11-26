@@ -1,12 +1,13 @@
 'use client';
 import React from 'react';
+import { Container } from '@/components/ui';
 
 // App-wide error boundary (Next.js App Router): any client-side exception
 // in a route shows this friendly screen instead of the raw "Application
 // error" text. The error itself is never rendered — no message, no stack.
 export default function Error({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 text-center">
+    <Container className="py-16 text-center">
       <h1 className="text-2xl font-extrabold text-ink">Something went wrong</h1>
       <p className="mx-auto mt-2 max-w-md text-sm text-muted">
         Please reload the page and try again. If it keeps happening, try again in a few minutes.
@@ -27,6 +28,6 @@ export default function Error({ reset }: { error: Error & { digest?: string }; r
           Reload page
         </button>
       </div>
-    </div>
+    </Container>
   );
 }
