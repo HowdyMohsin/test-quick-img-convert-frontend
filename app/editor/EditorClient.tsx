@@ -25,6 +25,56 @@ function filterString(a: Adjust): string {
   return `brightness(${a.brightness}%) contrast(${a.contrast}%) saturate(${a.saturate}%) grayscale(${a.grayscale}%) sepia(${a.sepia}%) blur(${a.blur}px)`;
 }
 
+type WatermarkPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | 'center';
+interface Watermark { text: string; position: WatermarkPosition; opacity: number; }
+interface Frame { radius: number; borderWidth: number; borderColor: string; }
+const DEFAULT_WATERMARK: Watermark = { text: '', position: 'bottom-right', opacity: 70 };
+const DEFAULT_FRAME: Frame = { radius: 0, borderWidth: 0, borderColor: '#4F46E5' };
+
+// Watermark text drawn on a canvas of size w×h. White with a dark
+// outline so it stays readable on light and dark images alike.
+function drawWatermark(ctx: CanvasRenderingContext2D, w: number, h: number, wm: Watermark) {
+  const text = wm.text.trim();
+  if (!text) return;
+  const fontSize = Math.max(14, Math.round(w / 25));
+  const pad = Math.max(10, Math.round(w / 40));
+  ctx.save();
+  ctx.globalAlpha = Math.max(0.1, Math.min(1, wm.opacity / 100));
+  ctx.font = `600 ${fontSize}px system-ui, sans-serif`;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+  ctx.lineWidth = Math.max(2, fontSize / 8);
+  const tw = ctx.measureText(text).width;
+  let x: number;
+  let y: number;
+  switch (wm.position) {
+    case 'top-left': x = pad; y = pad + fontSize; break;
+    case 'top-right': x = w - pad - tw; y = pad + fontSize; break;
+    case 'bottom-left': x = pad; y = h - pad; break;
+    case 'center': x = (w - tw) / 2; y = (h + fontSize) / 2; break;
+    default: x = w - pad - tw; y = h - pad; // bottom-right
+  }
+  ctx.strokeText(text, x, y);
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+// Rounded-rectangle path (radius clamped to half the smaller side).
+function traceRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  const radius = Math.max(0, Math.min(r, w / 2, h / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + w - radius, y);
+  ctx.arcTo(x + w, y, x + w, y + radius, radius);
+  ctx.lineTo(x + w, y + h - radius);
+  ctx.arcTo(x + w, y + h, x + w - radius, y + h, radius);
+  ctx.lineTo(x + radius, y + h);
+  ctx.arcTo(x, y + h, x, y + h - radius, radius);
+  ctx.lineTo(x, y + radius);
+  ctx.arcTo(x, y, x + radius, y, radius);
+  ctx.closePath();
+}
+
 function loadImageFromBlob(blob: Blob): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(blob);
@@ -62,6 +112,9 @@ export default function EditorClient() {
   const [brushColor, setBrushColor] = useState('#4F46E5');
   const [brushSize, setBrushSize] = useState(6);
   const [adjust, setAdjust] = useState<Adjust>(DEFAULT_ADJUST);
+  const [sharpenStrength, setSharpenStrength] = useState(50);
+  const [watermark, setWatermark] = useState<Watermark>(DEFAULT_WATERMARK);
+  const [frame, setFrame] = useState<Frame>(DEFAULT_FRAME);
   const [cropRect, setCropRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [resizeW, setResizeW] = useState('');
   const [resizeH, setResizeH] = useState('');
@@ -95,9 +148,27 @@ export default function EditorClient() {
     const ctx = view.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, view.width, view.height);
+    // Rounded corners clip the image itself; the watermark is drawn
+    // inside the clip and the border is stroked on top of it.
+    ctx.save();
+    if (frame.radius > 0) {
+      traceRoundRect(ctx, 0, 0, view.width, view.height, frame.radius);
+      ctx.clip();
+    }
     ctx.filter = filterString(adjust);
     ctx.drawImage(base, 0, 0);
     ctx.filter = 'none';
+    drawWatermark(ctx, view.width, view.height, watermark);
+    ctx.restore();
+    if (frame.borderWidth > 0) {
+      const bw = frame.borderWidth;
+      ctx.save();
+      ctx.strokeStyle = frame.borderColor;
+      ctx.lineWidth = bw;
+      traceRoundRect(ctx, bw / 2, bw / 2, view.width - bw, view.height - bw, Math.max(0, frame.radius - bw / 2));
+      ctx.stroke();
+      ctx.restore();
+    }
     // Crop selection overlay (drawn in display space = base pixels here).
     if (cropRect && cropRect.w > 0 && cropRect.h > 0) {
       ctx.save();
@@ -109,7 +180,7 @@ export default function EditorClient() {
       ctx.fillRect(cropRect.x, cropRect.y, cropRect.w, cropRect.h);
       ctx.restore();
     }
-  }, [adjust, cropRect]);
+  }, [adjust, cropRect, watermark, frame]);
 
   // Re-render whenever adjustments or the crop overlay change.
   useEffect(() => { renderView(); }, [renderView]);
@@ -173,6 +244,10 @@ export default function EditorClient() {
     setResizeW(String(base.width));
     setResizeH(String(base.height));
     setAdjust(DEFAULT_ADJUST);
+    // A new image starts with a clean watermark and frame, like the
+    // adjustments; position/opacity preferences are kept.
+    setWatermark((w) => ({ ...DEFAULT_WATERMARK, position: w.position, opacity: w.opacity }));
+    setFrame(DEFAULT_FRAME);
     setCropRect(null);
     historyRef.current = [];
     historyIdxRef.current = -1;
@@ -445,6 +520,58 @@ export default function EditorClient() {
     renderView();
   };
 
+  // ---- Sharpen + watermark (each commits one history step) ----
+  // Sharpen is a 3x3 convolution on the base pixels — canvas filters
+  // have no sharpen. The kernel is blended by strength (0% = the
+  // original pixels), so one click is one undoable step.
+  const applySharpen = () => {
+    const base = baseRef.current;
+    if (!base || base.width === 0 || sharpenStrength <= 0) return;
+    const ctx = base.getContext('2d');
+    if (!ctx) return;
+    const w = base.width;
+    const h = base.height;
+    const src = ctx.getImageData(0, 0, w, h);
+    const dst = ctx.createImageData(w, h);
+    const s = src.data;
+    const d = dst.data;
+    const strength = sharpenStrength / 100;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        for (let c = 0; c < 3; c++) {
+          const center = s[i + c];
+          const up = s[(Math.max(0, y - 1) * w + x) * 4 + c];
+          const down = s[(Math.min(h - 1, y + 1) * w + x) * 4 + c];
+          const left = s[(y * w + Math.max(0, x - 1)) * 4 + c];
+          const right = s[(y * w + Math.min(w - 1, x + 1)) * 4 + c];
+          const conv = 5 * center - up - down - left - right;
+          d[i + c] = Math.max(0, Math.min(255, Math.round(center + strength * (conv - center))));
+        }
+        d[i + 3] = s[i + 3];
+      }
+    }
+    ctx.putImageData(dst, 0, 0);
+    commit();
+    renderView();
+  };
+
+  // Burns the watermark into the base image (one undoable step) and
+  // clears the live preview, so it can never be drawn twice. The
+  // preview is included in the download even without applying.
+  const applyWatermark = () => {
+    const base = baseRef.current;
+    if (!base || base.width === 0 || !watermark.text.trim()) return;
+    const ctx = base.getContext('2d');
+    if (!ctx) return;
+    drawWatermark(ctx, base.width, base.height, watermark);
+    commit();
+    setWatermark((w) => ({ ...w, text: '' }));
+    // The watermark state change re-renders the view via the effect;
+    // no direct renderView() here — it would draw the preview again
+    // from the stale closure on top of the baked text.
+  };
+
   const download = () => {
     const base = baseRef.current;
     if (!base || base.width === 0) return;
@@ -457,9 +584,28 @@ export default function EditorClient() {
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, out.width, out.height);
     }
+    // Same frame/watermark as the live view: rounded corners clip the
+    // image (transparent in PNG, white in JPG), the watermark is drawn
+    // inside the clip, the border is stroked on top.
+    ctx.save();
+    if (frame.radius > 0) {
+      traceRoundRect(ctx, 0, 0, out.width, out.height, frame.radius);
+      ctx.clip();
+    }
     ctx.filter = filterString(adjust);
     ctx.drawImage(base, 0, 0);
     ctx.filter = 'none';
+    drawWatermark(ctx, out.width, out.height, watermark);
+    ctx.restore();
+    if (frame.borderWidth > 0) {
+      const bw = frame.borderWidth;
+      ctx.save();
+      ctx.strokeStyle = frame.borderColor;
+      ctx.lineWidth = bw;
+      traceRoundRect(ctx, bw / 2, bw / 2, out.width - bw, out.height - bw, Math.max(0, frame.radius - bw / 2));
+      ctx.stroke();
+      ctx.restore();
+    }
     const mime = exportFormat === 'jpg' ? 'image/jpeg' : 'image/png';
     out.toBlob((blob) => {
       if (!blob) return;
@@ -669,6 +815,10 @@ export default function EditorClient() {
               <h2 className="text-sm font-bold uppercase tracking-wide text-muted">Adjust</h2>
               <button type="button" disabled={!adjustmentsChanged} onClick={resetAdjustments} className="text-sm font-semibold text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50">Reset</button>
             </div>
+            <div className="mt-3">
+              <button type="button" className={toolBtn(adjust.grayscale === 100)} aria-pressed={adjust.grayscale === 100} onClick={() => setAdjust((a) => ({ ...a, grayscale: a.grayscale === 100 ? 0 : 100 }))}>Black &amp; white</button>
+              <p className="mt-1.5 text-xs text-muted">One tap for black &amp; white — sets Grayscale to 100% (tap again to restore colour). The Grayscale slider below does the same thing gradually.</p>
+            </div>
             <div className="mt-3 space-y-3">
               {([
                 ['brightness', 'Brightness', 0, 200, '%'],
@@ -694,6 +844,76 @@ export default function EditorClient() {
                   />
                 </div>
               ))}
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-muted">Sharpen</h2>
+            <div className="mt-3">
+              <label htmlFor="sharpen-strength" className="mb-1 flex justify-between text-sm font-semibold text-ink">
+                <span>Strength</span>
+                <span className="font-normal text-muted">{sharpenStrength}%</span>
+              </label>
+              <input id="sharpen-strength" type="range" min={0} max={100} value={sharpenStrength} onChange={(e) => setSharpenStrength(Number(e.target.value))} className="w-full accent-[#4F46E5]" />
+            </div>
+            <Button variant="secondary" className="mt-3 w-full" disabled={sharpenStrength <= 0} onClick={applySharpen}>Apply sharpen</Button>
+            <p className="mt-2 text-xs text-muted">Sharpens the image once per click. Undo removes it.</p>
+          </Card>
+
+          <Card className="p-4">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-muted">Watermark</h2>
+            <div className="mt-3 space-y-3">
+              <div>
+                <label htmlFor="wm-text" className="mb-1 block text-sm font-semibold text-ink">Text</label>
+                <input id="wm-text" type="text" maxLength={60} value={watermark.text} placeholder="e.g. © Your Name" onChange={(e) => setWatermark((w) => ({ ...w, text: e.target.value }))} className="min-h-[44px] w-full rounded-card border border-line bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              </div>
+              <div>
+                <label htmlFor="wm-position" className="mb-1 block text-sm font-semibold text-ink">Position</label>
+                <select id="wm-position" value={watermark.position} onChange={(e) => setWatermark((w) => ({ ...w, position: e.target.value as WatermarkPosition }))} className="min-h-[44px] w-full rounded-card border border-line bg-surface px-3 text-sm text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30">
+                  <option value="bottom-right">Bottom right</option>
+                  <option value="bottom-left">Bottom left</option>
+                  <option value="top-right">Top right</option>
+                  <option value="top-left">Top left</option>
+                  <option value="center">Centre</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="wm-opacity" className="mb-1 flex justify-between text-sm font-semibold text-ink">
+                  <span>Opacity</span>
+                  <span className="font-normal text-muted">{watermark.opacity}%</span>
+                </label>
+                <input id="wm-opacity" type="range" min={10} max={100} value={watermark.opacity} onChange={(e) => setWatermark((w) => ({ ...w, opacity: Number(e.target.value) }))} className="w-full accent-[#4F46E5]" />
+              </div>
+              <Button variant="secondary" className="w-full" disabled={!watermark.text.trim()} onClick={applyWatermark}>Apply watermark</Button>
+              <p className="text-xs text-muted">Previewed live on the canvas and included in the download. Apply burns it into the image — then Undo can remove it.</p>
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-muted">Corners &amp; border</h2>
+            <div className="mt-3 space-y-3">
+              <div>
+                <label htmlFor="frame-radius" className="mb-1 flex justify-between text-sm font-semibold text-ink">
+                  <span>Rounded corners</span>
+                  <span className="font-normal text-muted">{frame.radius}px</span>
+                </label>
+                <input id="frame-radius" type="range" min={0} max={200} value={frame.radius} onChange={(e) => setFrame((f) => ({ ...f, radius: Number(e.target.value) }))} className="w-full accent-[#4F46E5]" />
+              </div>
+              <div>
+                <label htmlFor="frame-border" className="mb-1 flex justify-between text-sm font-semibold text-ink">
+                  <span>Border width</span>
+                  <span className="font-normal text-muted">{frame.borderWidth}px</span>
+                </label>
+                <input id="frame-border" type="range" min={0} max={40} value={frame.borderWidth} onChange={(e) => setFrame((f) => ({ ...f, borderWidth: Number(e.target.value) }))} className="w-full accent-[#4F46E5]" />
+              </div>
+              <div>
+                <label htmlFor="frame-color" className="mb-1 block text-sm font-semibold text-ink">Border colour</label>
+                <div className="flex items-center gap-2">
+                  <input id="frame-color" type="color" value={frame.borderColor} onChange={(e) => setFrame((f) => ({ ...f, borderColor: e.target.value }))} className="h-11 w-14 cursor-pointer rounded-card border border-line bg-surface" />
+                  <span className="text-sm text-muted">{frame.borderColor}</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted">Rounded corners are transparent in PNG and white in JPG.</p>
             </div>
           </Card>
 
