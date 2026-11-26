@@ -20,14 +20,18 @@ interface ToolFile {
   downloadUrl?: string; outSize?: number; jobId?: string; uploadId?: string;
   quality: number; compress: number; stripMeta: boolean; bitrate: string; channels: string; sampleRate: string;
   codec: string; crf: number; resolution: string;
-  // Four plan-gated features (GET /v1/features): stripGps removes ONLY
+  // Plan-gated features (GET /v1/features): stripGps removes ONLY
   // the GPS EXIF tags (keeps the rest of the metadata); targetSizeKb is
   // the target output size in KB as typed ('' = off, parsed at convert
   // time); renamePattern is the batch rename pattern ('' = unchanged);
+  // compressEnabled (default true) turns PNG compression on/off —
+  // off sends settings.compress_enabled: false; stripAiData sends
+  // settings.strip_ai_data to remove the AI credit/metadata.
   // outQuality is the REAL quality the backend used (out_info.quality),
   // which can be lower than the requested quality when a target size
   // made the backend lower it — never guessed.
   stripGps: boolean; targetSizeKb: string; renamePattern: string; outQuality?: number;
+  compressEnabled: boolean; stripAiData: boolean;
   // waking: the request is slow because the free backend is waking up.
   // doneAt orders the converted list newest first. outName/outWidth/
   // outHeight are the REAL backend results for a finished job.
@@ -171,7 +175,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       detected: (it.detected || it.name.split('.').pop() || '').toUpperCase(),
       status: 'ready', progress: 0, uploadId: it.uploadId,
       quality: 85, compress: 6, stripMeta: true, bitrate: '192', channels: 'Stereo', sampleRate: '44100', codec: 'H.264', crf: 23, resolution: 'Original',
-      stripGps: false, targetSizeKb: '', renamePattern: '',
+      stripGps: false, targetSizeKb: '', renamePattern: '', compressEnabled: true, stripAiData: false,
     }));
     // Dedup by upload id: the effect runs again when the user returns to
     // this pair page, and the same files must never appear twice.
@@ -204,7 +208,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
         detected: (f.name.split('.').pop() || '').toUpperCase(),
         status: 'ready', progress: 0, quality: 85, compress: 6, stripMeta: true,
         bitrate: '192', channels: 'Stereo', sampleRate: '44100', codec: 'H.264', crf: 23, resolution: 'Original',
-        stripGps: false, targetSizeKb: '', renamePattern: '',
+        stripGps: false, targetSizeKb: '', renamePattern: '', compressEnabled: true, stripAiData: false,
       }));
       return [...prev, ...mapped];
     });
@@ -532,13 +536,26 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       // Other image targets get no quality/compression setting.
       const imageSettings: Record<string, unknown> = { strip_metadata: tf.stripMeta };
       if (isLossyTarget) imageSettings.quality = tf.quality;
-      if (isPngTarget) imageSettings.compression = tf.compress;
+      if (isPngTarget) {
+        // compress_enabled: false means "no compression at all". It is
+        // only sent when the plan allows the toggle (the backend 403s
+        // feature_locked otherwise); when the toggle is on (the default)
+        // the level is sent exactly as before.
+        if (tf.compressEnabled === false) {
+          if (features?.compress_toggle) imageSettings.compress_enabled = false;
+        } else {
+          imageSettings.compression = tf.compress;
+        }
+      }
       // Plan-gated settings — only sent when the plan allows them, so a
       // locked user can never smuggle them through the API (the backend
       // 403s feature_locked as the backstop). strip_gps removes ONLY the
-      // GPS EXIF tags; target_size_kb makes the backend lower quality
+      // GPS EXIF tags; strip_ai_data removes the AI credit/metadata
+      // (C2PA, XMP AI fields, PNG text chunks) while keeping the rest of
+      // the metadata; target_size_kb makes the backend lower quality
       // until the file fits (never below quality 10).
       if (features?.gps_remover && tf.stripGps) imageSettings.strip_gps = true;
+      if (features?.ai_data_remover && tf.stripAiData) imageSettings.strip_ai_data = true;
       const targetKb = parseTargetSizeKb(tf.targetSizeKb);
       if (features?.target_size && targetKb) imageSettings.target_size_kb = targetKb;
       const settings: Record<string, unknown> = from.category === 'Images'
@@ -808,8 +825,9 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
     // 60%). The backend reports no compression ratio in out_info (only
     // format, width, height, quality), so the setting is the honest
     // source: it is the level the encoder was asked to use, never a
-    // measured or faked number.
-    parts.push(`Compression: ${f.compress * 10}%`);
+    // measured or faked number. With the compress toggle off the row
+    // says so instead of a made-up percentage.
+    parts.push(f.compressEnabled === false ? 'Compression: off' : `Compression: ${f.compress * 10}%`);
     return parts.join(' · ');
   };
   const convertedActions = (f: ToolFile) => (<>
@@ -921,12 +939,21 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                       <input type="range" min={10} max={100} value={firstPending?.quality ?? 85} onChange={(e) => setAll({ quality: Number(e.target.value) })} className="mt-1 w-full" aria-label="Output quality" />
                     </label>
                   )}
-                  {isPngTarget && (
-                    <label className="block">Compress: <strong>{firstPending?.compress ?? 6}</strong>
-                      <input type="range" min={0} max={9} value={firstPending?.compress ?? 6} onChange={(e) => setAll({ compress: Number(e.target.value) })} className="mt-1 w-full" aria-label="PNG compression" />
-                      <span className="mt-1 block text-xs text-muted">Lossless PNG compression, 0–9. Higher means a smaller file with no loss of image quality.</span>
-                    </label>
-                  )}
+                  {isPngTarget && (<>
+                    <div>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p>Compress: <strong>{(firstPending?.compressEnabled ?? true) ? (firstPending?.compress ?? 6) : 'off'}</strong></p>
+                          <input type="range" min={0} max={9} value={firstPending?.compress ?? 6} disabled={!(firstPending?.compressEnabled ?? true)} onChange={(e) => setAll({ compress: Number(e.target.value) })} className="mt-1 w-full disabled:opacity-40" aria-label="PNG compression" />
+                        </div>
+                        {features?.compress_toggle && (
+                          <span className="pt-1"><Switch checked={firstPending?.compressEnabled ?? true} onChange={(v) => setAll({ compressEnabled: v })} label="Compression on or off" /></span>
+                        )}
+                      </div>
+                      <span className="mt-1 block text-xs text-muted">{(firstPending?.compressEnabled ?? true) ? 'Lossless PNG compression, 0–9. Higher means a smaller file with no loss of image quality.' : 'Compression is off — the file is saved with no compression.'}</span>
+                    </div>
+                    {!features?.compress_toggle && lockedFeatureRow('Compression on/off', 'Compress toggle')}
+                  </>)}
                   {!isLossyTarget && !isPngTarget && (
                     <p className="text-muted">Default settings are used for this conversion. Quality and compression controls appear for JPG, WebP, AVIF and PNG targets.</p>
                   )}
@@ -936,6 +963,14 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                       ? <p className="text-xs text-muted">Remove GPS location — already removed, because “Strip metadata” above is on. Turn that off to remove GPS only and keep the rest of the metadata.</p>
                       : <div className="flex items-center gap-3"><Switch checked={firstPending?.stripGps ?? false} onChange={(v) => setAll({ stripGps: v })} label="Remove GPS location" /><span>Remove GPS location only — other metadata (camera, date) is kept.</span></div>
                   ) : lockedFeatureRow('Remove GPS location only', 'Remove GPS location')}
+                  {features?.ai_data_remover ? (
+                    (firstPending?.stripMeta ?? true)
+                      ? <p className="text-xs text-muted">Remove AI data — already removed, because “Strip metadata” above is on. Turn that off to remove AI data only and keep the rest of the metadata.</p>
+                      : <div>
+                        <div className="flex items-center gap-3"><Switch checked={firstPending?.stripAiData ?? false} onChange={(v) => setAll({ stripAiData: v })} label="Remove AI data" /><span>Remove AI data</span></div>
+                        <p className="mt-1 text-xs text-muted">Removes the AI credit and metadata from the file. Invisible pixel watermarks (like Google SynthID) cannot be removed.</p>
+                      </div>
+                  ) : lockedFeatureRow('Remove AI data', 'AI data remover')}
                   {isLossyTarget && (features?.target_size ? (
                     <label className="block">Target size (KB)
                       <input type="text" inputMode="numeric" value={firstPending?.targetSizeKb ?? ''} placeholder="e.g. 100" onChange={(e) => setAll({ targetSizeKb: e.target.value })} className="mt-1 min-h-[44px] w-full max-w-xs rounded-card border border-line px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Target file size in kilobytes" />

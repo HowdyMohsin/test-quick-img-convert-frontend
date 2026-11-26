@@ -172,7 +172,7 @@ export async function fetchSite(): Promise<any> {
 // backend enforces the same flags (403 feature_locked), so a failed or
 // stale fetch must never unlock a paid feature: null means "unknown",
 // and callers treat unknown as locked.
-export interface PlanFeatures { gps_remover: boolean; compare: boolean; batch_rename: boolean; target_size: boolean }
+export interface PlanFeatures { gps_remover: boolean; compare: boolean; batch_rename: boolean; target_size: boolean; compress_toggle: boolean; ai_data_remover: boolean }
 export async function fetchFeatures(): Promise<PlanFeatures | null> {
   try {
     const res = await fetch('/api/v1/features', { credentials: 'include' });
@@ -183,6 +183,8 @@ export async function fetchFeatures(): Promise<PlanFeatures | null> {
       compare: !!d?.compare,
       batch_rename: !!d?.batch_rename,
       target_size: !!d?.target_size,
+      compress_toggle: !!d?.compress_toggle,
+      ai_data_remover: !!d?.ai_data_remover,
     };
   } catch { return null; }
 }
