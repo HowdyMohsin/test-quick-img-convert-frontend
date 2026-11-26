@@ -37,6 +37,7 @@ const CODE_MESSAGES: Record<string, string> = {
   csrf_required: 'Something went wrong — please refresh the page and try again.',
   csrf_invalid: 'Something went wrong — please refresh the page and try again.',
   account_banned: 'This account is banned. Contact support for help.',
+  feature_locked: 'This feature needs Basic or Pro — see the pricing page to upgrade.',
   signin_required: 'Sign in — it’s free — to convert your files.',
   not_found: 'That file could not be found — please upload it again.',
   rate_limited: 'Too many requests — please wait a moment and try again.',
@@ -164,6 +165,25 @@ export async function fetchSite(): Promise<any> {
     const res = await fetch('/api/v1/site', { credentials: 'include' });
     if (!res.ok) return null;
     return await res.json();
+  } catch { return null; }
+}
+
+// GET /v1/features — which converter features this plan may use. The
+// backend enforces the same flags (403 feature_locked), so a failed or
+// stale fetch must never unlock a paid feature: null means "unknown",
+// and callers treat unknown as locked.
+export interface PlanFeatures { gps_remover: boolean; compare: boolean; batch_rename: boolean; target_size: boolean }
+export async function fetchFeatures(): Promise<PlanFeatures | null> {
+  try {
+    const res = await fetch('/api/v1/features', { credentials: 'include' });
+    if (!res.ok) return null;
+    const d = await res.json();
+    return {
+      gps_remover: !!d?.gps_remover,
+      compare: !!d?.compare,
+      batch_rename: !!d?.batch_rename,
+      target_size: !!d?.target_size,
+    };
   } catch { return null; }
 }
 

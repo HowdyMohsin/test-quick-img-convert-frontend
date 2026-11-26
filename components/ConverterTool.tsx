@@ -1,10 +1,10 @@
 'use client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { apiFetch, formatBytes, friendlyErrorMessage, getCsrf, notifyMeChanged, toArray, truncateMiddle } from '@/lib/api';
+import { apiFetch, fetchFeatures, formatBytes, friendlyErrorMessage, getCsrf, notifyMeChanged, toArray, truncateMiddle, type PlanFeatures } from '@/lib/api';
 import type { FormatInfo, Catalog } from '@/lib/catalog';
 import { pairDescription } from '@/lib/pair-copy';
 import { Button, Card, CompareSlider, EmptyState, FileThumb, Modal, Progress, Switch, Toast, Tooltip } from './ui';
-import { Check, Download, Eye, LayoutGrid, List, Lock, PenLine, Pencil, Trash2, Upload, X } from 'lucide-react';
+import { Check, Download, Eye, LayoutGrid, List, Lock, PenLine, Pencil, SlidersHorizontal, Trash2, Upload, X } from 'lucide-react';
 import { AdFrame, MobileAnchorAd } from './AdFrame';
 import { HeroPicker, HOME_UPLOAD_HANDOFF_KEY, type HomeUploadHandoff, type HomeUploadHandoffPayload } from './HeroPicker';
 import { useMe } from './Header';
@@ -17,9 +17,17 @@ interface ToolFile {
   // or the convert request still in flight) — the bar renders
   // indeterminate instead of a made-up number.
   status: FileStatus; progress: number | null; error?: string; hint?: string;
-  downloadUrl?: string; outSize?: number; savings?: number; jobId?: string; uploadId?: string;
+  downloadUrl?: string; outSize?: number; jobId?: string; uploadId?: string;
   quality: number; compress: number; stripMeta: boolean; bitrate: string; channels: string; sampleRate: string;
   codec: string; crf: number; resolution: string;
+  // Four plan-gated features (GET /v1/features): stripGps removes ONLY
+  // the GPS EXIF tags (keeps the rest of the metadata); targetSizeKb is
+  // the target output size in KB as typed ('' = off, parsed at convert
+  // time); renamePattern is the batch rename pattern ('' = unchanged);
+  // outQuality is the REAL quality the backend used (out_info.quality),
+  // which can be lower than the requested quality when a target size
+  // made the backend lower it — never guessed.
+  stripGps: boolean; targetSizeKb: string; renamePattern: string; outQuality?: number;
   // waking: the request is slow because the free backend is waking up.
   // doneAt orders the converted list newest first. outName/outWidth/
   // outHeight are the REAL backend results for a finished job.
@@ -50,14 +58,24 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   const { me, loaded } = useMe();
   const [files, setFiles] = useState<ToolFile[]>([]);
   const [dragOver, setDragOver] = useState(false);
-  const [dragOverSide, setDragOverSide] = useState(false);
   const [running, setRunning] = useState(false);
   const [doneCount, setDoneCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [limitHit, setLimitHit] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
-  const [showCompare, setShowCompare] = useState(false);
   const [editorAllowed, setEditorAllowed] = useState(false);
+  // Plan-gated converter features (GET /v1/features): null while loading
+  // — unknown is treated as LOCKED, never as unlocked, and the backend
+  // enforces the same flags (403 feature_locked) as the backstop.
+  const [features, setFeatures] = useState<PlanFeatures | null>(null);
+  // Paywall modal: the locked feature the user just tried (null = closed).
+  const [paywallFeature, setPaywallFeature] = useState<string | null>(null);
+  // Per-row before/after compare: the converted file being compared plus
+  // the original's URL (an object URL for a local file, the server's
+  // editor-file URL for a home-handoff file — created on open, revoked
+  // on close when it is a blob: URL).
+  const [compareFile, setCompareFile] = useState<ToolFile | null>(null);
+  const [compareBeforeUrl, setCompareBeforeUrl] = useState<string | null>(null);
   // Converted-files section: list/grid view, ZIP menu, delete-all
   // confirm, and the rename popup (base name editable, extension fixed).
   const [convertedView, setConvertedView] = useState<'list' | 'grid'>('list');
@@ -70,7 +88,6 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   const [previewFile, setPreviewFile] = useState<{ url: string; name: string } | null>(null);
   const [showEditorModal, setShowEditorModal] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const inputRefBelow = useRef<HTMLInputElement>(null);
   const abortRef = useRef<Record<string, boolean>>({});
   // In-flight uploads (XHR, so the bar can show real bytes sent) and
   // "waking up" timers, both keyed by file id.
@@ -102,6 +119,10 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
     apiFetch<{ plan?: string; editor_allowed?: boolean }>('/v1/editor/access')
       .then((d) => setEditorAllowed(!!d.editor_allowed))
       .catch(() => setEditorAllowed(false));
+  }, []);
+
+  useEffect(() => {
+    fetchFeatures().then((d) => setFeatures(d)).catch(() => setFeatures(null));
   }, []);
 
   useEffect(() => {
@@ -150,6 +171,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       detected: (it.detected || it.name.split('.').pop() || '').toUpperCase(),
       status: 'ready', progress: 0, uploadId: it.uploadId,
       quality: 85, compress: 6, stripMeta: true, bitrate: '192', channels: 'Stereo', sampleRate: '44100', codec: 'H.264', crf: 23, resolution: 'Original',
+      stripGps: false, targetSizeKb: '', renamePattern: '',
     }));
     // Dedup by upload id: the effect runs again when the user returns to
     // this pair page, and the same files must never appear twice.
@@ -182,6 +204,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
         detected: (f.name.split('.').pop() || '').toUpperCase(),
         status: 'ready', progress: 0, quality: 85, compress: 6, stripMeta: true,
         bitrate: '192', channels: 'Stereo', sampleRate: '44100', codec: 'H.264', crf: 23, resolution: 'Original',
+        stripGps: false, targetSizeKb: '', renamePattern: '',
       }));
       return [...prev, ...mapped];
     });
@@ -204,6 +227,13 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   // settings they converted with, so their displayed numbers never move.
   const setAll = (patch: Partial<ToolFile>) => setFiles((fs) => fs.map((f) => (f.status === 'done' ? f : { ...f, ...patch })));
   const removeFile = (id: string) => {
+    // Dropping the file being compared closes its slider too (and frees
+    // the object URL when the original was a local blob).
+    if (compareFile?.id === id) {
+      if (compareBeforeUrl && compareBeforeUrl.startsWith('blob:')) URL.revokeObjectURL(compareBeforeUrl);
+      setCompareBeforeUrl(null);
+      setCompareFile(null);
+    }
     const next = files.filter((f) => f.id !== id);
     setFiles(next);
     // The batch is gone — drop the handoff so the files do not come back
@@ -212,6 +242,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   };
 
   // --- file names ---------------------------------------------------------
+  const ILLEGAL_NAME = /[/\\:*?"<>|]/;
   const splitBaseExt = (name: string) => {
     const i = name.lastIndexOf('.');
     return i > 0 ? { base: name.slice(0, i), ext: name.slice(i + 1) } : { base: name, ext: '' };
@@ -223,6 +254,52 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   const outputName = (f: ToolFile) => {
     if (f.customName) return `${splitBaseExt(f.customName).base}.${to.slug}`;
     return f.outName || `${splitBaseExt(f.name).base}.${to.slug}`;
+  };
+
+  // --- batch rename pattern ----------------------------------------------
+  // The backend's name_pattern only expands {name} and {ext} — {n} (zero
+  // padded sequence) and {date} (YYYYMMDD) are expanded HERE, client-side,
+  // and the finished literal is sent as name_pattern. The sent pattern
+  // always ends with the target extension (appended as {ext} when the
+  // user typed none) so the backend's {ext} substitution gives the output
+  // file its real extension — without it the file would have no
+  // extension at all.
+  const expandPattern = (pattern: string, index: number, total: number): string => {
+    const width = Math.max(3, String(Math.max(1, total)).length);
+    const n = String(index + 1).padStart(width, '0');
+    const now = new Date();
+    const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    let out = pattern.replaceAll('{n}', n).replaceAll('{date}', date);
+    if (!out.includes('{ext}') && !/\.[A-Za-z0-9]{1,5}$/.test(out)) out += '.{ext}';
+    return out;
+  };
+  // Preview name for a staged file: the same expansion, with {name} and
+  // {ext} resolved to the real values so the user sees the finished name.
+  const previewPatternName = (pattern: string, index: number, total: number, f: ToolFile): string => {
+    const stem = splitBaseExt(f.customName || f.name).base;
+    return expandPattern(pattern, index, total).replaceAll('{name}', stem).replaceAll('{ext}', to.slug);
+  };
+  const validatePattern = (pattern: string, batchSize: number): string | null => {
+    const p = pattern.trim();
+    if (!p) return null;
+    if (ILLEGAL_NAME.test(p)) return 'The pattern cannot contain / \\ : * ? " < > or |.';
+    if (batchSize > 1 && !p.includes('{n}') && !p.includes('{name}')) return 'Add {n} so each file gets its own number — otherwise every file would get the same name.';
+    return null;
+  };
+  // Target size (KB) as typed: '' = off; a whole number 1–102400 = on.
+  // Anything else is invalid (never sent — the backend drops it too).
+  const parseTargetSizeKb = (raw: string): number | null => {
+    const t = raw.trim();
+    if (!t || !/^\d+$/.test(t)) return null;
+    const n = Number(t);
+    return n >= 1 && n <= 102400 ? n : null;
+  };
+  const targetSizeError = (raw: string | undefined): string | null => {
+    if (!raw || !raw.trim()) return null;
+    if (!/^\d+$/.test(raw.trim())) return 'Enter a whole number of kilobytes.';
+    const n = Number(raw.trim());
+    if (n < 1 || n > 102400) return 'Enter a target between 1 and 102400 KB.';
+    return null;
   };
 
   // --- "waking up" note ---------------------------------------------------
@@ -295,7 +372,6 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   // the rename is applied client-side: the displayed name, the file sent
   // on upload (fresh files), and the downloaded file's name (anchor
   // `download` attribute overrides the server's Content-Disposition).
-  const ILLEGAL_NAME = /[/\\:*?"<>|]/;
   const openRename = (f: ToolFile) => {
     const current = f.status === 'done' ? outputName(f) : displayName(f);
     const { base, ext } = splitBaseExt(current);
@@ -352,6 +428,30 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
     setPreviewFile(null);
   };
 
+  // --- before/after compare ----------------------------------------------
+  // Original = the local file blob when this session uploaded it; for a
+  // home-handoff file there is no local blob, so the original comes from
+  // the server's editor-file endpoint (editor-gated, and compare is a
+  // Basic/Pro feature, so the users who can compare can fetch it). The
+  // converted side is the job's real download URL. A row with neither
+  // source gets no Compare button at all — never a broken slider.
+  const canCompare = (f: ToolFile) => !!(f.downloadUrl && (f.file || f.uploadId));
+  const openCompare = (f: ToolFile) => {
+    closeCompare();
+    if (f.file) {
+      setCompareBeforeUrl(URL.createObjectURL(f.file));
+      setCompareFile(f);
+    } else if (f.uploadId) {
+      setCompareBeforeUrl(`/api/v1/editor/file/${f.uploadId}`);
+      setCompareFile(f);
+    }
+  };
+  const closeCompare = () => {
+    if (compareBeforeUrl && compareBeforeUrl.startsWith('blob:')) URL.revokeObjectURL(compareBeforeUrl);
+    setCompareBeforeUrl(null);
+    setCompareFile(null);
+  };
+
   const openInEditor = async (tf: ToolFile) => {
     if (!editorAllowed) { setShowEditorModal(true); return; }
     try {
@@ -378,7 +478,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
     setToast(`Preset “${label}” applied to all files.`);
   };
 
-  const convertOne = async (tf: ToolFile, batchId: string): Promise<boolean> => {
+  const convertOne = async (tf: ToolFile, batchId: string, batchIndex = 0, batchTotal = 1): Promise<boolean> => {
     if (abortRef.current[tf.id]) return false;
     try {
       // Files handed over from the home page already have an upload id —
@@ -422,6 +522,14 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       const imageSettings: Record<string, unknown> = { strip_metadata: tf.stripMeta };
       if (isLossyTarget) imageSettings.quality = tf.quality;
       if (isPngTarget) imageSettings.compression = tf.compress;
+      // Plan-gated settings — only sent when the plan allows them, so a
+      // locked user can never smuggle them through the API (the backend
+      // 403s feature_locked as the backstop). strip_gps removes ONLY the
+      // GPS EXIF tags; target_size_kb makes the backend lower quality
+      // until the file fits (never below quality 10).
+      if (features?.gps_remover && tf.stripGps) imageSettings.strip_gps = true;
+      const targetKb = parseTargetSizeKb(tf.targetSizeKb);
+      if (features?.target_size && targetKb) imageSettings.target_size_kb = targetKb;
       const settings: Record<string, unknown> = from.category === 'Images'
         ? imageSettings
         : from.category === 'Audio'
@@ -429,10 +537,17 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
         : from.category === 'Video'
         ? { codec: tf.codec, crf: tf.crf, resolution: tf.resolution }
         : {};
+      // Batch rename pattern — {n}/{date} expanded client-side (the
+      // backend only expands {name}/{ext}); a per-file rename wins over
+      // the pattern for that file.
+      let namePattern: string | undefined;
+      if (features?.batch_rename && tf.renamePattern.trim() && !tf.customName) {
+        namePattern = expandPattern(tf.renamePattern.trim(), batchIndex, batchTotal);
+      }
       armWakingTimer(tf.id);
       let job: { id: string; job_id?: string };
       try {
-        job = await apiFetch<{ id: string; job_id?: string }>('/v1/convert', { method: 'POST', body: { upload_id: uploadId, to: to.slug, settings, batch_id: batchId } });
+        job = await apiFetch<{ id: string; job_id?: string }>('/v1/convert', { method: 'POST', body: { upload_id: uploadId, to: to.slug, settings, batch_id: batchId, ...(namePattern ? { name_pattern: namePattern } : {}) } });
       } finally {
         clearWakingTimer(tf.id);
         updateFile(tf.id, { waking: false });
@@ -482,7 +597,10 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
           const outSize = j.out_size || 0;
           // out_name and out_info.width/height are the REAL backend
           // results — the converted list shows them, never guesses.
-          updateFile(tf.id, { status: 'done', progress: 100, outSize, savings: tf.size ? Math.round((1 - outSize / tf.size) * 100) : 0, downloadUrl: `/api/v1/jobs/${jobId}/download`, doneAt: Date.now(), outName: j.out_name || undefined, outWidth: typeof j.out_info?.width === 'number' ? j.out_info.width : undefined, outHeight: typeof j.out_info?.height === 'number' ? j.out_info.height : undefined, waking: false });
+          // out_info.quality is the REAL quality used: with a target
+          // size set, the backend may have lowered it below the
+          // requested quality, and the row must show what was used.
+          updateFile(tf.id, { status: 'done', progress: 100, outSize, downloadUrl: `/api/v1/jobs/${jobId}/download`, doneAt: Date.now(), outName: j.out_name || undefined, outWidth: typeof j.out_info?.width === 'number' ? j.out_info.width : undefined, outHeight: typeof j.out_info?.height === 'number' ? j.out_info.height : undefined, outQuality: typeof j.out_info?.quality === 'number' ? j.out_info.quality : undefined, waking: false });
           setDoneCount((c) => c + 1);
           notifyMeChanged();
           return true;
@@ -530,6 +648,10 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   const convertAll = async () => {
     const ready = files.filter((f) => f.status === 'ready' || f.status === 'error');
     if (!ready.length) return;
+    // An invalid rename pattern would give every file the same output
+    // name — stop with a friendly line instead of converting wrongly.
+    const patternErr = validatePattern(ready[0]?.renamePattern ?? '', ready.length);
+    if (patternErr) { setToast(patternErr); return; }
     if (ready.length > remaining) { setLimitHit(true); return; }
     setRunning(true);
     setDoneCount(0);
@@ -538,8 +660,9 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
     // convertOne reports its own outcome, so count the resolved values:
     // `files` here is the render-time closure (every file is 'ready' at
     // click time), so filtering it for 'done' can never see a finished
-    // file and the toast below could never fire.
-    const results = await Promise.all(ready.map((f) => convertOne(f, batchId)));
+    // file and the toast below could never fire. The batch index/total
+    // travel with each file so the rename pattern numbers them in order.
+    const results = await Promise.all(ready.map((f, i) => convertOne(f, batchId, i, ready.length)));
     setRunning(false);
     const done = results.filter(Boolean).length;
     if (done > 0) {
@@ -616,22 +739,56 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   // First pending file — the global Settings row reads its values, and
   // every change writes back to all pending files through setAll.
   const firstPending = pendingFiles[0];
+  // Files that Convert all will convert, in order — the rename pattern
+  // preview and the batch numbering both use this list.
+  const readyFiles = files.filter((f) => f.status === 'ready' || f.status === 'error');
+  // Batch rename pattern validation + preview, from the same list the
+  // conversion will number (so the preview and the real names agree).
+  const patternErr = validatePattern(firstPending?.renamePattern ?? '', readyFiles.length);
   const thumbKind = from.category === 'Images' ? 'image' : from.category === 'Audio' ? 'audio' : from.category === 'Video' ? 'video' : from.slug === 'pdf' ? 'pdf' : 'file';
+
+  // Locked-feature row: a locked control that opens the paywall modal
+  // instead of doing anything — the feature is never half-enabled.
+  const lockedFeatureRow = (label: string, feature: string) => (
+    <button type="button" onClick={() => setPaywallFeature(feature)} aria-label={`${label} — Basic and Pro only`}
+      className="flex w-full items-center gap-3 rounded-card border border-line px-3 py-2.5 text-left hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+      <Lock className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+      <span className="flex-1 text-sm text-ink">{label}</span>
+      <span className="rounded-full bg-soft px-2 py-0.5 text-xs font-semibold text-muted">Basic &amp; Pro</span>
+    </button>
+  );
 
   // --- converted-files section ----------------------------------------------
   // Every number shown comes from the REAL job/file: output name + size
-  // from the backend job, dimensions from the backend out_info
-  // (image engines return width/height), quality from the setting the
-  // user chose, compression as the MEASURED size reduction
+  // from the backend job, dimensions and the quality actually used from
+  // the backend out_info, compression as the MEASURED size reduction
   // (1 − out/in). Nothing is guessed or hard-coded; a field that does
   // not exist for this pair is omitted, never faked.
   const convertedMeta = (f: ToolFile) => {
     const parts: string[] = [];
     if (f.outWidth && f.outHeight) parts.push(`${f.outWidth} × ${f.outHeight}px`);
-    if (isLossyTarget) parts.push(`Quality: ${f.quality}%`);
-    if (typeof f.savings === 'number' && f.savings !== 0) {
-      parts.push(f.savings > 0 ? `Compression: ${f.savings}% smaller` : `Compression: ${-f.savings}% larger`);
+    // Quality shown is the REAL one the backend used (outQuality). With a
+    // target size set, the backend may have lowered it below the quality
+    // the user chose — the row shows what was used. When the backend did
+    // not report one, fall back to the chosen quality (also real).
+    const q = typeof f.outQuality === 'number' ? f.outQuality : (isLossyTarget ? f.quality : undefined);
+    if (typeof q === 'number') parts.push(`Quality: ${q}%`);
+    // Target size: the real resulting size decides the wording — reached,
+    // or not reached ("smallest possible" only at the quality floor of
+    // 10, where the backend guarantees it cannot go lower).
+    const tk = parseTargetSizeKb(f.targetSizeKb);
+    if (tk && typeof f.outSize === 'number') {
+      if (f.outSize <= tk * 1024) parts.push(`Target ${tk} KB reached`);
+      else if (f.outQuality === 10) parts.push(`Target ${tk} KB not reached — smallest possible at quality 10`);
+      else parts.push(`Target ${tk} KB · got ${formatBytes(f.outSize)}`);
     }
+    // Compression: the user's own compress setting as a percentage — the
+    // compress bar is 0–9, so level × 10 (level 7 → 70%, default 6 →
+    // 60%). The backend reports no compression ratio in out_info (only
+    // format, width, height, quality), so the setting is the honest
+    // source: it is the level the encoder was asked to use, never a
+    // measured or faked number.
+    parts.push(`Compression: ${f.compress * 10}%`);
     return parts.join(' · ');
   };
   const convertedActions = (f: ToolFile) => (<>
@@ -645,13 +802,28 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       <button onClick={() => openPreview(f)} aria-label={`Preview ${displayName(f)}`} title="Preview"
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Eye className="h-5 w-5" /></button>
     )}
+    {isImagePair && features?.compare && canCompare(f) && (
+      <button onClick={() => (compareFile?.id === f.id ? closeCompare() : openCompare(f))} aria-label={`Compare original and converted ${outputName(f)}`} aria-pressed={compareFile?.id === f.id} title="Compare original and converted"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><SlidersHorizontal className="h-5 w-5" /></button>
+    )}
+    {isImagePair && !features?.compare && (
+      <button onClick={() => setPaywallFeature('Before/After compare')} aria-label="Compare original and converted — Basic and Pro only" title="Compare — Basic and Pro only"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Lock className="h-5 w-5" /></button>
+    )}
     {f.downloadUrl && (
       <a href={f.downloadUrl} download={outputName(f)} aria-label={`Download ${outputName(f)}`} title="Download"
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Download className="h-5 w-5" /></a>
     )}
     <button onClick={() => removeFile(f.id)} aria-label={`Delete ${outputName(f)}`} title="Delete"
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Trash2 className="h-5 w-5" /></button>
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Trash2 className="h-5 w-5" /></button>
   </>);
+
+  // The expanded compare slider under a converted row — list and grid
+  // views share it: original on the left, converted on the right.
+  const comparePanel = (f: ToolFile) => {
+    if (compareFile?.id !== f.id || !compareBeforeUrl || !f.downloadUrl) return null;
+    return <div className="mt-3"><CompareSlider beforeLabel={`${from.label} original`} afterLabel={`${to.label} result`} beforeSrc={compareBeforeUrl} afterSrc={f.downloadUrl} /></div>;
+  };
 
   if (disabledPair) {
     return (
@@ -733,6 +905,18 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                     <p className="text-muted">Default settings are used for this conversion. Quality and compression controls appear for JPG, WebP, AVIF and PNG targets.</p>
                   )}
                   <div className="flex items-center gap-3"><Switch checked={firstPending?.stripMeta ?? true} onChange={(v) => setAll({ stripMeta: v })} label="Strip metadata (including GPS location)" /><span>Strip metadata (GPS location removed by default)</span></div>
+                  {features?.gps_remover ? (
+                    (firstPending?.stripMeta ?? true)
+                      ? <p className="text-xs text-muted">Remove GPS location — already removed, because “Strip metadata” above is on. Turn that off to remove GPS only and keep the rest of the metadata.</p>
+                      : <div className="flex items-center gap-3"><Switch checked={firstPending?.stripGps ?? false} onChange={(v) => setAll({ stripGps: v })} label="Remove GPS location" /><span>Remove GPS location only — other metadata (camera, date) is kept.</span></div>
+                  ) : lockedFeatureRow('Remove GPS location only', 'Remove GPS location')}
+                  {isLossyTarget && (features?.target_size ? (
+                    <label className="block">Target size (KB)
+                      <input type="text" inputMode="numeric" value={firstPending?.targetSizeKb ?? ''} placeholder="e.g. 100" onChange={(e) => setAll({ targetSizeKb: e.target.value })} className="mt-1 min-h-[44px] w-full max-w-xs rounded-card border border-line px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Target file size in kilobytes" />
+                      <span className="mt-1 block text-xs text-muted">The converter lowers quality automatically until the file fits — never below quality 10. The real resulting size is always shown.</span>
+                      {targetSizeError(firstPending?.targetSizeKb) && <span role="alert" className="mt-1 block text-xs font-semibold text-danger">{targetSizeError(firstPending?.targetSizeKb)}</span>}
+                    </label>
+                  ) : lockedFeatureRow('Target file size', 'Target file size'))}
                 </>)}
                 {from.category === 'Audio' && (<>
                   <label className="block">Bitrate
@@ -769,6 +953,16 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                 {from.category !== 'Images' && from.category !== 'Audio' && from.category !== 'Video' && (
                   <p className="text-muted">Default settings are used for this conversion. Quality options appear for image, audio, and video files.</p>
                 )}
+                {features?.batch_rename ? (
+                  <label className="block">Batch rename pattern
+                    <input type="text" value={firstPending?.renamePattern ?? ''} placeholder="e.g. photo-{n}" onChange={(e) => setAll({ renamePattern: e.target.value })} className="mt-1 min-h-[44px] w-full max-w-md rounded-card border border-line px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Batch rename pattern" />
+                    <span className="mt-1 block text-xs text-muted">Use {'{n}'} for the file number (photo-001, photo-002), {'{date}'} for today’s date (YYYYMMDD) and {'{name}'} for the original name. Empty = names unchanged.</span>
+                    {patternErr && <span role="alert" className="mt-1 block text-xs font-semibold text-danger">{patternErr}</span>}
+                    {!patternErr && (firstPending?.renamePattern ?? '').trim() && readyFiles.length > 0 && (
+                      <span className="mt-1 block text-xs text-muted">Output names: {readyFiles.slice(0, 2).map((rf, i) => previewPatternName(firstPending?.renamePattern ?? '', i, readyFiles.length, rf)).join(', ')}{readyFiles.length > 2 ? ', …' : ''}</span>
+                    )}
+                  </label>
+                ) : lockedFeatureRow('Batch rename pattern', 'Batch rename')}
               </div>
             </div>
           )}
@@ -847,9 +1041,6 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
           )}
         </div>
       )}
-      {showCompare && doneFiles > 0 && from.category === 'Images' && (
-        <div className="px-5 pb-5"><CompareSlider beforeLabel={`${from.label} original`} afterLabel={`${to.label} result`} /></div>
-      )}
       </Card>
 
       {convertedFiles.length > 0 && (
@@ -893,10 +1084,10 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                         <p className="mt-0.5 flex items-center text-xs font-semibold text-success"><Check className="mr-1 h-3.5 w-3.5" />Done · {formatBytes(f.outSize || 0)}</p>
                         <p className="text-xs text-muted">{from.label} → {to.label} · {formatBytes(f.size)} → {formatBytes(f.outSize || 0)}</p>
                         {convertedMeta(f) && <p className="text-xs text-muted">{convertedMeta(f)}</p>}
-                        {isImagePair && <button onClick={() => setShowCompare((v) => !v)} className="mt-1 text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Compare</button>}
                       </div>
                       {convertedActions(f)}
                     </div>
+                    {comparePanel(f)}
                   </li>
                 ))}
               </ul>
@@ -914,6 +1105,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                       </div>
                     </div>
                     <div className="mt-3 flex items-center justify-end gap-1 border-t border-line pt-2">{convertedActions(f)}</div>
+                    {comparePanel(f)}
                   </div>
                 ))}
               </div>
@@ -937,27 +1129,10 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
           </div>
         </Card>
       )}
-    {/* Below the tool: the small upload box, then the ad — full width of
-        the column, never a sidebar again. */}
-    <Card className="mt-4 overflow-hidden">
-      <div
-        role="button" tabIndex={0} aria-label={`Drop ${from.label} files here, or press Enter to browse`}
-        onClick={() => inputRefBelow.current?.click()}
-        onKeyDown={(e) => { if (e.key === 'Enter') inputRefBelow.current?.click(); }}
-        onDragOver={(e) => { e.preventDefault(); setDragOverSide(true); }}
-        onDragLeave={() => setDragOverSide(false)}
-        onDrop={(e) => { e.preventDefault(); setDragOverSide(false); addFiles(e.dataTransfer.files); }}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-1 border-2 border-dashed px-4 py-6 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${dragOverSide ? 'border-primary bg-indigo-50 shadow-[0_0_0_4px_rgba(79,70,229,.15)]' : 'border-line bg-soft/40 hover:border-primary/50'}`}>
-        <Upload className="h-7 w-7 text-muted" aria-hidden />
-        <p className="text-sm font-bold text-ink">Drop files here or browse</p>
-        <p className="text-xs text-muted">Accepted: {acceptExts}</p>
-        <input ref={inputRefBelow} type="file" accept={acceptExts} multiple className="hidden" aria-hidden
-          onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} />
-      </div>
-      <div className="border-t border-line px-4 py-3 text-center text-xs text-muted">
-        Up to {batchLimit} files · {from.category === 'Video' ? '500 MB' : from.category === 'Audio' ? '100 MB' : '200 MB'} each · {remaining} left today
-      </div>
-    </Card>
+    {/* The pair_sidebar ad below the tool. The second upload box that
+        used to sit here is gone (user order 2026-11-26 — it looked like
+        a duplicate): the pair page has exactly one upload area, the main
+        drop zone at the top of the tool card. */}
     <div className="mt-4"><AdFrame slot="pair_sidebar" /></div>
     <MobileAnchorAd show={doneFiles > 0} />
     {toast && <Toast message={toast} onClose={() => setToast(null)} />}
@@ -972,6 +1147,13 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       <div className="mt-4 flex flex-wrap gap-2">
         <a href="/pricing" className="inline-flex min-h-[44px] items-center rounded-card bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primaryDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">See pricing</a>
         <Button variant="secondary" onClick={() => setShowEditorModal(false)}>Not now</Button>
+      </div>
+    </Modal>
+    <Modal open={!!paywallFeature} onClose={() => setPaywallFeature(null)} title={`${paywallFeature || 'This feature'} is a paid feature`}>
+      <p className="text-sm leading-relaxed text-muted">This feature is available on Basic and Pro. Upgrade to use it on your conversions.</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <a href="/pricing" className="inline-flex min-h-[44px] items-center rounded-card bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primaryDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">See pricing</a>
+        <Button variant="secondary" onClick={() => setPaywallFeature(null)}>Not now</Button>
       </div>
     </Modal>
     <Modal open={!!renameTarget} onClose={closeRename} title="Rename file">

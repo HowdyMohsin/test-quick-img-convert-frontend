@@ -67,18 +67,12 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
     return set;
   }, [catalog]);
 
-  // Home layout only: restore the last-used pair. The bar always shows
-  // the pair of the page it sits on (initialFrom / initialTo).
-  useEffect(() => {
-    if (layout !== 'default') return;
-    try {
-      const saved = localStorage.getItem('qic-last-pair');
-      if (saved) {
-        const { from: f, to: t } = JSON.parse(saved);
-        if (catalog.targetsByInput[f]?.includes(t)) { setFrom(f); setTo(t); }
-      }
-    } catch { /* ignore */ }
-  }, [catalog, layout]);
+  // Initial load shows BOTH dropdowns empty (user order 2026-11-26):
+  // no last-used pair is restored, so "Convert from" and "Convert to"
+  // both show their placeholder until the user picks — or uploads a
+  // file, which locks "Convert from" to the detected format. The
+  // pair-page bar is unaffected: it always shows its own pair through
+  // initialFrom / initialTo.
 
   // Convert-from rows show the popular targets (JPG → WEBP PNG AVIF);
   // Convert-to rows keep the plain badge (no targets map passed).
@@ -115,11 +109,8 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
   const pairUrl = from && to ? `/convert/${from}-to-${to}` : '#';
   const category = from ? catalog.formats.find((f) => f.slug === from)?.category : null;
 
-  useEffect(() => {
-    if (from && to) {
-      try { localStorage.setItem('qic-last-pair', JSON.stringify({ from, to })); } catch { /* ignore */ }
-    }
-  }, [from, to]);
+  // No last-pair persistence: the dropdowns start empty on every load
+  // (user order 2026-11-26), so nothing writes 'qic-last-pair' any more.
 
   const writeHandoff = (list: StagedFile[]) => {
     try {
@@ -193,9 +184,10 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
     if (firstGood) {
       const match = catalog.formats.find((f) => f.slug === firstGood.detected)!;
       onFrom(firstGood.detected);
-      // The bar follows the detected file: a dropped MP3 switches the
-      // category to Audio, so the bar and the locked "from" never disagree.
-      setCatFilter(match.category);
+      // The category bar NEVER follows the upload (user order 2026-11-26):
+      // it stays on "All" unless the user clicks a category. The detected
+      // format still locks "Convert from" and the hint below still names
+      // it — only the active tab must not move on its own.
       setDetectNote(`Detected: ${match.label} — now choose the format to convert to`);
     }
   };

@@ -304,14 +304,37 @@ export function PasswordField({ label, error, id, showStrength, ...rest }: React
 }
 
 // ---- CompareSlider ----
-export function CompareSlider({ beforeLabel, afterLabel }: { beforeLabel: string; afterLabel: string }) {
+// Before/after comparison with a draggable divider. When both image URLs
+// are given, the ORIGINAL is the base on the left (clipped to the divider
+// position) and the CONVERTED result fills the frame behind it — dragging
+// reveals one or the other. Without images it falls back to the labelled
+// blocks (used by nothing at the moment; kept so the component never
+// renders an empty frame).
+export function CompareSlider({ beforeLabel, afterLabel, beforeSrc, afterSrc }: { beforeLabel: string; afterLabel: string; beforeSrc?: string; afterSrc?: string }) {
   const [pos, setPos] = useState(50);
-  return <div className="relative overflow-hidden rounded-card-lg border border-line" role="group" aria-label="Before and after comparison">
-    <div className="flex h-48 items-center justify-center bg-soft text-sm text-muted">{beforeLabel}</div>
-    <div className="absolute inset-y-0 left-0 overflow-hidden bg-indigo-50" style={{ width: `${pos}%` }}>
-      <div className="flex h-48 w-full items-center justify-center text-sm text-ink">{afterLabel}</div>
+  if (!beforeSrc || !afterSrc) {
+    return <div className="relative overflow-hidden rounded-card-lg border border-line" role="group" aria-label="Before and after comparison">
+      <div className="flex h-48 items-center justify-center bg-soft text-sm text-muted">{beforeLabel}</div>
+      <div className="absolute inset-y-0 left-0 overflow-hidden bg-indigo-50" style={{ width: `${pos}%` }}>
+        <div className="flex h-48 w-full items-center justify-center text-sm text-ink">{afterLabel}</div>
+      </div>
+      <input type="range" min={0} max={100} value={pos} onChange={(e) => setPos(Number(e.target.value))} aria-label="Compare before and after"
+        className="absolute inset-0 h-full w-full cursor-ew-resize opacity-0" />
+      <div className="pointer-events-none absolute inset-y-0 flex items-center" style={{ left: `calc(${pos}% - 2px)` }}>
+        <div className="h-full w-1 bg-primary" />
+      </div>
+      <span className="absolute left-2 top-2 rounded bg-ink/70 px-2 py-0.5 text-xs text-white">Before</span>
+      <span className="absolute right-2 top-2 rounded bg-ink/70 px-2 py-0.5 text-xs text-white">After</span>
+    </div>;
+  }
+  return <div className="relative overflow-hidden rounded-card-lg border border-line bg-soft" role="group" aria-label="Before and after comparison">
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img src={afterSrc} alt={afterLabel} className="block h-64 w-full object-contain sm:h-80" draggable={false} />
+    <div className="absolute inset-0 overflow-hidden" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={beforeSrc} alt={beforeLabel} className="block h-64 w-full object-contain sm:h-80" draggable={false} />
     </div>
-    <input type="range" min={0} max={100} value={pos} onChange={(e) => setPos(Number(e.target.value))} aria-label="Compare before and after"
+    <input type="range" min={0} max={100} value={pos} onChange={(e) => setPos(Number(e.target.value))} aria-label="Drag to compare original and converted"
       className="absolute inset-0 h-full w-full cursor-ew-resize opacity-0" />
     <div className="pointer-events-none absolute inset-y-0 flex items-center" style={{ left: `calc(${pos}% - 2px)` }}>
       <div className="h-full w-1 bg-primary" />
