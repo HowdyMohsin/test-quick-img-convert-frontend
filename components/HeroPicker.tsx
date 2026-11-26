@@ -1,11 +1,10 @@
 'use client';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftRight, Lock, Upload, X } from 'lucide-react';
+import { ArrowLeftRight, Upload, X } from 'lucide-react';
 import { Combobox, formatOptions } from './Combobox';
 import { CategoryBar } from './CategoryBar';
 import { FileThumb } from './ui';
-import { useMe } from './Header';
 import type { Catalog } from '@/lib/catalog';
 import { apiFetch, formatBytes, friendlyErrorMessage } from '@/lib/api';
 
@@ -41,9 +40,8 @@ function thumbKindFor(catalog: Catalog, slug: string): 'image' | 'audio' | 'vide
   return 'file';
 }
 
-export function HeroPicker({ catalog, showUploadBox = false, layout = 'default', initialFrom = null, initialTo = null, lockedFrom = false, lockedTo = false }: { catalog: Catalog; showUploadBox?: boolean; layout?: 'default' | 'bar'; initialFrom?: string | null; initialTo?: string | null; lockedFrom?: boolean; lockedTo?: boolean }) {
+export function HeroPicker({ catalog, showUploadBox = false, layout = 'default', initialFrom = null, initialTo = null, lockedFrom = false }: { catalog: Catalog; showUploadBox?: boolean; layout?: 'default' | 'bar'; initialFrom?: string | null; initialTo?: string | null; lockedFrom?: boolean }) {
   const router = useRouter();
-  const { me, loaded } = useMe();
   const [from, setFrom] = useState<string | null>(initialFrom);
   const [to, setTo] = useState<string | null>(initialTo);
   // Category pill bar (home layout only): filters both dropdowns to one
@@ -210,18 +208,6 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
   // manually for a file that does convert.
   const fromLocked = lockedFrom || staged.some((f) => f.status !== 'error');
 
-  // Suspense lock (user order 2026-11-26): once >=1 file is uploaded
-  // (ready), an anonymous visitor cannot pick a target or start the
-  // conversion — "Convert to" locks (lock icon) and the Start button
-  // becomes "Sign in free to convert". Signing in (free, no email
-  // verification) unlocks both at once. The pair-page bar passes its
-  // own files through lockedTo, because its staged list lives in
-  // ConverterTool, not in this component. The swap button locks too —
-  // swapping would otherwise change the target behind the lock. The
-  // backend refuses anonymous converts as well, so the rule cannot be
-  // bypassed from the browser console.
-  const suspenseLocked = !!lockedTo || (loaded && !me && readyCount > 0);
-
   return <div className="rounded-card-xl border border-line bg-surface p-5 shadow-card sm:p-6">
     {layout === 'default' && (
       <div className="mb-5">
@@ -261,7 +247,7 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
             ))}
           </ul>
         )}
-        {readyCount > 0 && <p className="mt-2 text-center text-sm font-semibold text-success" role="status">{readyCount} file{readyCount === 1 ? '' : 's'} ready — {suspenseLocked ? 'sign in free to convert them.' : 'choose the target format and start converting.'}</p>}
+        {readyCount > 0 && <p className="mt-2 text-center text-sm font-semibold text-success" role="status">{readyCount} file{readyCount === 1 ? '' : 's'} ready — choose the target format and start converting.</p>}
         {detectNote && <p className="mt-2 text-center text-sm font-semibold text-success" role="status">{detectNote}</p>}
       </div>
     )}
@@ -269,12 +255,12 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
       <div className="grid items-end gap-3 sm:grid-cols-[1fr_auto_1fr_auto]">
         <Combobox id="hero-from" label="Convert from" placeholder="Choose a format…" options={fromOptions} value={from} onChange={onFrom} locked={fromLocked} />
         <div className="flex justify-center pb-1">
-          <button type="button" onClick={swap} disabled={!reverseExists || suspenseLocked} aria-label="Swap formats" title={reverseExists ? 'Swap formats' : 'Reverse conversion is not available'}
+          <button type="button" onClick={swap} disabled={!reverseExists} aria-label="Swap formats" title={reverseExists ? 'Swap formats' : 'Reverse conversion is not available'}
             className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40">
             <ArrowLeftRight className="h-5 w-5" />
           </button>
         </div>
-        <Combobox id="hero-to" label="Convert to" placeholder={from ? 'Choose a format…' : 'Choose “from” first'} options={toOptions} value={to} onChange={setTo} disabled={!from} locked={suspenseLocked} lockTitle="Locked — sign in free to choose the target format and convert" />
+        <Combobox id="hero-to" label="Convert to" placeholder={from ? 'Choose a format…' : 'Choose “from” first'} options={toOptions} value={to} onChange={setTo} disabled={!from} />
         <button type="button" onClick={() => router.push(pairUrl)} disabled={!from || !to}
           className="flex min-h-[48px] items-center justify-center whitespace-nowrap rounded-card bg-primary px-5 text-sm font-bold text-white hover:bg-primaryDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
           Go to converter
@@ -284,12 +270,12 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
       <div className="grid items-end gap-4 sm:grid-cols-[1fr_auto_1fr]">
         <Combobox id="hero-from" label="Convert from" placeholder="Choose a format…" options={fromOptions} value={from} onChange={onFrom} locked={fromLocked} />
         <div className="flex justify-center pb-1">
-          <button type="button" onClick={swap} disabled={!reverseExists || suspenseLocked} aria-label="Swap formats" title={reverseExists ? 'Swap formats' : 'Reverse conversion is not available'}
+          <button type="button" onClick={swap} disabled={!reverseExists} aria-label="Swap formats" title={reverseExists ? 'Swap formats' : 'Reverse conversion is not available'}
             className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40">
             <ArrowLeftRight className="h-5 w-5" />
           </button>
         </div>
-        <Combobox id="hero-to" label="Convert to" placeholder={from ? 'Choose a format…' : 'Choose “from” first'} options={toOptions} value={to} onChange={setTo} disabled={!from} locked={suspenseLocked} lockTitle="Locked — sign in free to choose the target format and convert" />
+        <Combobox id="hero-to" label="Convert to" placeholder={from ? 'Choose a format…' : 'Choose “from” first'} options={toOptions} value={to} onChange={setTo} disabled={!from} />
       </div>
     )}
     {from && to && (
@@ -301,23 +287,18 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
         row above, so no bottom button is rendered for it. */}
     {layout !== 'bar' && (
     <div className="mt-4">
-      {from && to ? (suspenseLocked ? (
-        <a href="/login" aria-label="Sign in free to convert"
-          className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-card bg-primary px-5 py-3 text-base font-bold text-white hover:bg-primaryDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-          <Lock className="h-5 w-5" aria-hidden /> Sign in free to convert
-        </a>
-      ) : (
+      {from && to ? (
         <a href={pairUrl} target="_blank" rel="noopener" aria-label="Start converting — opens in a new tab"
           className="flex min-h-[48px] w-full items-center justify-center rounded-card bg-primary px-5 py-3 text-base font-bold text-white hover:bg-primaryDark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
           Start converting <span className="ml-2 text-xs font-medium opacity-80">(opens in a new tab)</span>
         </a>
-      )) : (
+      ) : (
         <button disabled aria-disabled="true" className="min-h-[48px] w-full cursor-not-allowed rounded-card bg-primary/50 px-5 py-3 text-base font-bold text-white">
           Start converting
         </button>
       )}
     </div>
     )}
-    {layout === 'default' && <p className="mt-3 text-center text-xs text-muted">Sign in free to convert · Files auto-delete after 24 hours</p>}
+    {layout === 'default' && <p className="mt-3 text-center text-xs text-muted">Files auto-delete after 24 hours</p>}
   </div>;
 }
