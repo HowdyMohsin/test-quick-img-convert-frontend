@@ -29,6 +29,7 @@ export function Footer() {
           <li><Link className="text-muted hover:text-primary" href="/pricing">Pricing</Link></li>
           <li><Link className="text-muted hover:text-primary" href="/account">Account</Link></li>
           <li><Link className="text-muted hover:text-primary" href="/contact">Contact</Link></li>
+          <li><Link className="text-muted hover:text-primary" href="/status">API Status</Link></li>
         </ul>
       </div>
       <div>

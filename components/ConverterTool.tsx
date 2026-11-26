@@ -211,8 +211,8 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
     setToast(`Preset “${label}” applied to all files.`);
   };
 
-  const convertOne = async (tf: ToolFile, batchId: string): Promise<void> => {
-    if (abortRef.current[tf.id]) return;
+  const convertOne = async (tf: ToolFile, batchId: string): Promise<boolean> => {
+    if (abortRef.current[tf.id]) return false;
     try {
       // Files handed over from the home page already have an upload id —
       // skip the upload and convert straight away.
@@ -228,7 +228,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
         uploadId = up.id || up.upload_id || '';
         updateFile(tf.id, { uploadId, progress: 30 });
       }
-      if (abortRef.current[tf.id]) return;
+      if (abortRef.current[tf.id]) return false;
       updateFile(tf.id, { status: 'converting', progress: 45 });
       // Quality and compression are separate controls:
       // - Quality -> settings.quality, for lossy targets only (jpg, webp, avif).
@@ -262,7 +262,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       let pollFailures = 0;
       let waitingShown = false;
       for (;;) {
-        if (abortRef.current[tf.id] || !mountedRef.current) return;
+        if (abortRef.current[tf.id] || !mountedRef.current) return false;
         let j: any = null;
         try {
           const res = await apiFetch<{ jobs?: any[] }>(`/v1/jobs?ids=${jobId}`);
@@ -275,7 +275,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
           pollFailures += 1;
           if (pollFailures >= 5) {
             updateFile(tf.id, { status: 'error', error: 'Could not reach the server.', hint: 'Check your connection and try again.' });
-            return;
+            return false;
           }
           await new Promise((r) => setTimeout(r, 1500));
           waitedMs += 1500;
@@ -283,22 +283,22 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
         }
         if (!j) {
           updateFile(tf.id, { status: 'error', error: 'We lost track of this conversion.', hint: 'Please try again.' });
-          return;
+          return false;
         }
         if (j.status === 'done' || j.status === 'completed') {
           const outSize = j.out_size || 0;
           updateFile(tf.id, { status: 'done', progress: 100, outSize, savings: tf.size ? Math.round((1 - outSize / tf.size) * 100) : 0, downloadUrl: `/api/v1/jobs/${jobId}/download` });
           setDoneCount((c) => c + 1);
           notifyMeChanged();
-          return;
+          return true;
         }
         if (j.status === 'failed' || j.status === 'error') {
           updateFile(tf.id, { status: 'error', error: j.error_message || 'Conversion failed.', hint: 'Try the file again, or re-export it from the app that created it.' });
-          return;
+          return false;
         }
         if (j.status === 'cancelled') {
           updateFile(tf.id, { status: 'error', error: 'This conversion was cancelled.', hint: 'Try again if you still need it.' });
-          return;
+          return false;
         }
         // Still queued / running: keep waiting.
         const slow = waitedMs >= 60_000;
@@ -321,6 +321,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       } else {
         updateFile(tf.id, { status: 'error', error: friendlyErrorMessage(e, 'Something went wrong.'), hint: e?.hint || 'Check your connection and try again.' });
       }
+      return false;
     }
   };
 
@@ -332,9 +333,13 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
     setDoneCount(0);
     const batchId = `batch-${Date.now().toString(36)}`;
     // Pipelined: start each file's upload while earlier files convert.
-    await Promise.all(ready.map((f) => convertOne(f, batchId)));
+    // convertOne reports its own outcome, so count the resolved values:
+    // `files` here is the render-time closure (every file is 'ready' at
+    // click time), so filtering it for 'done' can never see a finished
+    // file and the toast below could never fire.
+    const results = await Promise.all(ready.map((f) => convertOne(f, batchId)));
     setRunning(false);
-    const done = files.filter((f) => f.status === 'done').length;
+    const done = results.filter(Boolean).length;
     if (done > 0) {
       setToast(`Conversion complete — ${done} file${done === 1 ? '' : 's'} ready to download.`);
       if (!sessionStorage.getItem('qic-success-toast')) {
