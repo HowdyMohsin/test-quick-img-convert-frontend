@@ -1,0 +1,39 @@
+# Quick IMG Convert — web build context exclusions.
+#
+# Hard rule (from a real failure on an earlier build): the build
+# context must NEVER contain host-installed artifacts. An empty
+# .dockerignore once let a 270 MB context including Windows
+# node_modules into the image, where COPY . . overwrote the
+# Linux-installed dependencies with Windows shims (node.exe: not
+# found, exit 127). Every line below is load-bearing.
+#
+# The Dockerfile installs dependencies INSIDE the image
+# (COPY package.json + lockfile -> npm ci -> COPY the remaining
+# source), and this file is what keeps host artifacts out of that
+# last COPY.
+
+# Host-installed dependencies / build outputs
+node_modules
+.next
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+# Tests never ship in the production image.
+e2e
+
+# Secrets and local state (never in an image)
+.env
+.env.local
+*.db
+/data
+logs
+*.log
+
+# VCS / OS junk
+.git
+.gitignore
+.DS_Store
+Thumbs.db

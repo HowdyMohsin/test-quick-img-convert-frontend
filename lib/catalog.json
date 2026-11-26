@@ -1,0 +1,4819 @@
+{
+  "categories": [
+    "Images",
+    "Camera RAW",
+    "Audio",
+    "Video",
+    "Documents and vector"
+  ],
+  "formats": [
+    {
+      "slug": "jpg",
+      "label": "JPG",
+      "category": "Images",
+      "extensions": [
+        "jpg",
+        "jpeg",
+        "jpe"
+      ],
+      "aliases": {
+        "jpeg": "jpg",
+        "jpe": "jpg"
+      },
+      "mime": [
+        "image/jpeg"
+      ],
+      "magic": [
+        "FFD8FF"
+      ],
+      "description": "The standard photo format: small files, universal support, lossy compression.",
+      "uses": [
+        "Photos",
+        "Web images",
+        "Email attachments"
+      ]
+    },
+    {
+      "slug": "png",
+      "label": "PNG",
+      "category": "Images",
+      "extensions": [
+        "png"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/png"
+      ],
+      "magic": [
+        "89504E470D0A1A0A"
+      ],
+      "description": "Lossless image format with full transparency support.",
+      "uses": [
+        "Screenshots",
+        "Logos",
+        "Graphics with transparency"
+      ]
+    },
+    {
+      "slug": "webp",
+      "label": "WebP",
+      "category": "Images",
+      "extensions": [
+        "webp"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/webp"
+      ],
+      "magic": [
+        "52494646????????57454250"
+      ],
+      "description": "Modern web image format: smaller than JPG and PNG, supports transparency and animation.",
+      "uses": [
+        "Web images",
+        "Photos",
+        "Animated images"
+      ]
+    },
+    {
+      "slug": "avif",
+      "label": "AVIF",
+      "category": "Images",
+      "extensions": [
+        "avif"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/avif"
+      ],
+      "magic": [
+        "6674797061766966"
+      ],
+      "description": "Next-generation image format with the best compression of any still-image format.",
+      "uses": [
+        "Web images",
+        "High-quality photos at tiny sizes"
+      ]
+    },
+    {
+      "slug": "gif",
+      "label": "GIF",
+      "category": "Images",
+      "extensions": [
+        "gif"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/gif"
+      ],
+      "magic": [
+        "47494638"
+      ],
+      "description": "Classic format for simple graphics and short animations (256 colours).",
+      "uses": [
+        "Animations",
+        "Memes",
+        "Simple graphics"
+      ]
+    },
+    {
+      "slug": "tiff",
+      "label": "TIFF",
+      "category": "Images",
+      "extensions": [
+        "tiff",
+        "tif"
+      ],
+      "aliases": {
+        "tif": "tiff"
+      },
+      "mime": [
+        "image/tiff"
+      ],
+      "magic": [
+        "49492A00",
+        "4D4D002A"
+      ],
+      "description": "High-quality lossless format used in print and archiving.",
+      "uses": [
+        "Print",
+        "Scanning",
+        "Archiving"
+      ]
+    },
+    {
+      "slug": "bmp",
+      "label": "BMP",
+      "category": "Images",
+      "extensions": [
+        "bmp"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/bmp"
+      ],
+      "magic": [
+        "424D"
+      ],
+      "description": "Uncompressed Windows bitmap format; large files, maximum compatibility.",
+      "uses": [
+        "Windows apps",
+        "Legacy software"
+      ]
+    },
+    {
+      "slug": "heic",
+      "label": "HEIC",
+      "category": "Images",
+      "extensions": [
+        "heic",
+        "heif"
+      ],
+      "aliases": {
+        "heif": "heic"
+      },
+      "mime": [
+        "image/heic",
+        "image/heif"
+      ],
+      "magic": [
+        "6674797068656963",
+        "667479706D696631",
+        "6674797068656978",
+        "6674797068656966"
+      ],
+      "description": "The photo format iPhones use: half the size of JPG at the same quality.",
+      "uses": [
+        "iPhone photos",
+        "Sharing photos with non-Apple devices"
+      ]
+    },
+    {
+      "slug": "ico",
+      "label": "ICO",
+      "category": "Images",
+      "extensions": [
+        "ico"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/vnd.microsoft.icon",
+        "image/x-icon"
+      ],
+      "magic": [
+        "00000100"
+      ],
+      "description": "Windows icon format holding several sizes in one file.",
+      "uses": [
+        "Favicons",
+        "App icons",
+        "Desktop icons"
+      ]
+    },
+    {
+      "slug": "tga",
+      "label": "TGA",
+      "category": "Images",
+      "extensions": [
+        "tga"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/x-tga"
+      ],
+      "magic": [],
+      "description": "Truevision Targa: uncompressed raster format from games and video.",
+      "uses": [
+        "Game textures",
+        "Video production"
+      ]
+    },
+    {
+      "slug": "cr2",
+      "label": "CR2",
+      "category": "Camera RAW",
+      "extensions": [
+        "cr2"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/x-canon-cr2"
+      ],
+      "magic": [
+        "49492A0010000000435232"
+      ],
+      "description": "Canon RAW photo file with the sensor's unprocessed data.",
+      "uses": [
+        "Canon cameras",
+        "Professional photo editing"
+      ]
+    },
+    {
+      "slug": "cr3",
+      "label": "CR3",
+      "category": "Camera RAW",
+      "extensions": [
+        "cr3"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/x-canon-cr3"
+      ],
+      "magic": [
+        "6674797063727878"
+      ],
+      "description": "Canon's newer RAW format (CR3), used by recent EOS cameras.",
+      "uses": [
+        "Canon cameras",
+        "Professional photo editing"
+      ]
+    },
+    {
+      "slug": "nef",
+      "label": "NEF",
+      "category": "Camera RAW",
+      "extensions": [
+        "nef"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/x-nikon-nef"
+      ],
+      "magic": [
+        "4D4D002A"
+      ],
+      "description": "Nikon RAW photo file with the sensor's unprocessed data.",
+      "uses": [
+        "Nikon cameras",
+        "Professional photo editing"
+      ]
+    },
+    {
+      "slug": "arw",
+      "label": "ARW",
+      "category": "Camera RAW",
+      "extensions": [
+        "arw"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/x-sony-arw"
+      ],
+      "magic": [
+        "49492A00"
+      ],
+      "description": "Sony RAW photo file with the sensor's unprocessed data.",
+      "uses": [
+        "Sony cameras",
+        "Professional photo editing"
+      ]
+    },
+    {
+      "slug": "orf",
+      "label": "ORF",
+      "category": "Camera RAW",
+      "extensions": [
+        "orf"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/x-olympus-orf"
+      ],
+      "magic": [
+        "4949524F",
+        "49492A00",
+        "4D4D002A"
+      ],
+      "description": "Olympus / OM System RAW photo file.",
+      "uses": [
+        "Olympus cameras",
+        "Professional photo editing"
+      ]
+    },
+    {
+      "slug": "raf",
+      "label": "RAF",
+      "category": "Camera RAW",
+      "extensions": [
+        "raf"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/x-fujifilm-raf"
+      ],
+      "magic": [
+        "46554A4946494C4D"
+      ],
+      "description": "Fujifilm RAW photo file with the sensor's unprocessed data.",
+      "uses": [
+        "Fujifilm cameras",
+        "Professional photo editing"
+      ]
+    },
+    {
+      "slug": "rw2",
+      "label": "RW2",
+      "category": "Camera RAW",
+      "extensions": [
+        "rw2"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/x-panasonic-rw2"
+      ],
+      "magic": [
+        "49495500"
+      ],
+      "description": "Panasonic / Leica RAW photo file.",
+      "uses": [
+        "Panasonic cameras",
+        "Professional photo editing"
+      ]
+    },
+    {
+      "slug": "dng",
+      "label": "DNG",
+      "category": "Camera RAW",
+      "extensions": [
+        "dng"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/x-adobe-dng"
+      ],
+      "magic": [
+        "49492A00",
+        "4D4D002A"
+      ],
+      "description": "Adobe's open RAW format, used by many cameras and phones.",
+      "uses": [
+        "Mobile RAW",
+        "Archiving RAW photos"
+      ]
+    },
+    {
+      "slug": "pef",
+      "label": "PEF",
+      "category": "Camera RAW",
+      "extensions": [
+        "pef"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/x-pentax-pef"
+      ],
+      "magic": [
+        "4D4D002A"
+      ],
+      "description": "Pentax RAW photo file with the sensor's unprocessed data.",
+      "uses": [
+        "Pentax cameras",
+        "Professional photo editing"
+      ]
+    },
+    {
+      "slug": "mp3",
+      "label": "MP3",
+      "category": "Audio",
+      "extensions": [
+        "mp3"
+      ],
+      "aliases": {},
+      "mime": [
+        "audio/mpeg"
+      ],
+      "magic": [
+        "494433",
+        "FFFB",
+        "FFF3",
+        "FFF2"
+      ],
+      "description": "The universal audio format: plays everywhere, small files.",
+      "uses": [
+        "Music",
+        "Podcasts",
+        "Ringtones"
+      ]
+    },
+    {
+      "slug": "wav",
+      "label": "WAV",
+      "category": "Audio",
+      "extensions": [
+        "wav"
+      ],
+      "aliases": {},
+      "mime": [
+        "audio/wav",
+        "audio/x-wav"
+      ],
+      "magic": [
+        "52494646????????57415645"
+      ],
+      "description": "Uncompressed CD-quality audio; large files, studio standard.",
+      "uses": [
+        "Audio editing",
+        "Mastering",
+        "Archiving"
+      ]
+    },
+    {
+      "slug": "flac",
+      "label": "FLAC",
+      "category": "Audio",
+      "extensions": [
+        "flac"
+      ],
+      "aliases": {},
+      "mime": [
+        "audio/flac"
+      ],
+      "magic": [
+        "664C6143"
+      ],
+      "description": "Lossless audio compression: perfect quality at about half the size of WAV.",
+      "uses": [
+        "Music libraries",
+        "Archiving",
+        "Hi-fi listening"
+      ]
+    },
+    {
+      "slug": "ogg",
+      "label": "OGG",
+      "category": "Audio",
+      "extensions": [
+        "ogg"
+      ],
+      "aliases": {},
+      "mime": [
+        "audio/ogg"
+      ],
+      "magic": [
+        "4F676753"
+      ],
+      "description": "Open audio container, usually with Vorbis audio.",
+      "uses": [
+        "Web audio",
+        "Game audio",
+        "Music"
+      ]
+    },
+    {
+      "slug": "m4a",
+      "label": "M4A",
+      "category": "Audio",
+      "extensions": [
+        "m4a"
+      ],
+      "aliases": {},
+      "mime": [
+        "audio/mp4"
+      ],
+      "magic": [
+        "667479704D3441",
+        "667479704D3442"
+      ],
+      "description": "Apple's audio format (AAC in an MP4 container).",
+      "uses": [
+        "iTunes",
+        "Apple Music",
+        "Podcasts"
+      ]
+    },
+    {
+      "slug": "aac",
+      "label": "AAC",
+      "category": "Audio",
+      "extensions": [
+        "aac"
+      ],
+      "aliases": {},
+      "mime": [
+        "audio/aac"
+      ],
+      "magic": [
+        "FFF1",
+        "FFF9"
+      ],
+      "description": "Efficient compressed audio; the standard for streaming and mobile.",
+      "uses": [
+        "Streaming",
+        "Mobile audio"
+      ]
+    },
+    {
+      "slug": "opus",
+      "label": "Opus",
+      "category": "Audio",
+      "extensions": [
+        "opus"
+      ],
+      "aliases": {},
+      "mime": [
+        "audio/opus"
+      ],
+      "magic": [
+        "4F676753"
+      ],
+      "description": "Open, low-latency codec that sounds great even at very low bitrates.",
+      "uses": [
+        "Voice chat",
+        "Streaming",
+        "Podcasts"
+      ]
+    },
+    {
+      "slug": "aiff",
+      "label": "AIFF",
+      "category": "Audio",
+      "extensions": [
+        "aiff",
+        "aif"
+      ],
+      "aliases": {
+        "aif": "aiff"
+      },
+      "mime": [
+        "audio/aiff"
+      ],
+      "magic": [
+        "464F524D????????41494646"
+      ],
+      "description": "Apple's uncompressed audio format, the Mac equivalent of WAV.",
+      "uses": [
+        "Audio editing",
+        "Mac studios"
+      ]
+    },
+    {
+      "slug": "wma",
+      "label": "WMA",
+      "category": "Audio",
+      "extensions": [
+        "wma"
+      ],
+      "aliases": {},
+      "mime": [
+        "audio/x-ms-wma"
+      ],
+      "magic": [
+        "3026B2758E66CF11A6D900AA0062CE6C"
+      ],
+      "description": "Windows Media Audio, Microsoft's compressed audio format.",
+      "uses": [
+        "Windows media",
+        "Legacy audio"
+      ]
+    },
+    {
+      "slug": "mp4",
+      "label": "MP4",
+      "category": "Video",
+      "extensions": [
+        "mp4"
+      ],
+      "aliases": {},
+      "mime": [
+        "video/mp4"
+      ],
+      "magic": [
+        "6674797069736F6D",
+        "667479706D703432",
+        "667479706D703431",
+        "6674797061766331"
+      ],
+      "description": "The universal video format: plays on every phone, browser and TV.",
+      "uses": [
+        "Videos",
+        "Streaming",
+        "Sharing"
+      ]
+    },
+    {
+      "slug": "mkv",
+      "label": "MKV",
+      "category": "Video",
+      "extensions": [
+        "mkv"
+      ],
+      "aliases": {},
+      "mime": [
+        "video/x-matroska"
+      ],
+      "magic": [
+        "1A45DFA3"
+      ],
+      "description": "Flexible open video container that holds many audio and subtitle tracks.",
+      "uses": [
+        "Movies",
+        "Archiving",
+        "Multi-track video"
+      ]
+    },
+    {
+      "slug": "mov",
+      "label": "MOV",
+      "category": "Video",
+      "extensions": [
+        "mov"
+      ],
+      "aliases": {},
+      "mime": [
+        "video/quicktime"
+      ],
+      "magic": [
+        "6674797071742020"
+      ],
+      "description": "Apple QuickTime video format, common from iPhones and Final Cut.",
+      "uses": [
+        "iPhone video",
+        "Video editing"
+      ]
+    },
+    {
+      "slug": "avi",
+      "label": "AVI",
+      "category": "Video",
+      "extensions": [
+        "avi"
+      ],
+      "aliases": {},
+      "mime": [
+        "video/x-msvideo"
+      ],
+      "magic": [
+        "52494646????????41564920"
+      ],
+      "description": "Classic Windows video container; large files, wide compatibility.",
+      "uses": [
+        "Legacy video",
+        "Windows apps"
+      ]
+    },
+    {
+      "slug": "webm",
+      "label": "WebM",
+      "category": "Video",
+      "extensions": [
+        "webm"
+      ],
+      "aliases": {},
+      "mime": [
+        "video/webm"
+      ],
+      "magic": [
+        "1A45DFA3"
+      ],
+      "description": "Open web video format built for browsers (VP8/VP9 + Opus).",
+      "uses": [
+        "Web video",
+        "Streaming"
+      ]
+    },
+    {
+      "slug": "wmv",
+      "label": "WMV",
+      "category": "Video",
+      "extensions": [
+        "wmv"
+      ],
+      "aliases": {},
+      "mime": [
+        "video/x-ms-wmv"
+      ],
+      "magic": [
+        "3026B2758E66CF11A6D900AA0062CE6C"
+      ],
+      "description": "Windows Media Video, Microsoft's video format.",
+      "uses": [
+        "Windows media",
+        "Legacy video"
+      ]
+    },
+    {
+      "slug": "m4v",
+      "label": "M4V",
+      "category": "Video",
+      "extensions": [
+        "m4v"
+      ],
+      "aliases": {},
+      "mime": [
+        "video/x-m4v"
+      ],
+      "magic": [
+        "667479704D3456",
+        "667479704D3450"
+      ],
+      "description": "Apple's video format, near-identical to MP4.",
+      "uses": [
+        "iTunes video",
+        "Apple devices"
+      ]
+    },
+    {
+      "slug": "3gp",
+      "label": "3GP",
+      "category": "Video",
+      "extensions": [
+        "3gp"
+      ],
+      "aliases": {},
+      "mime": [
+        "video/3gpp"
+      ],
+      "magic": [
+        "66747970336770",
+        "6674797033677036"
+      ],
+      "description": "Mobile video format from early phones; tiny files, low resolution.",
+      "uses": [
+        "Old phones",
+        "MMS video"
+      ]
+    },
+    {
+      "slug": "psd",
+      "label": "PSD",
+      "category": "Documents and vector",
+      "extensions": [
+        "psd"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/vnd.adobe.photoshop"
+      ],
+      "magic": [
+        "38425053"
+      ],
+      "description": "Adobe Photoshop document. Conversion uses the flattened composite image; layers are not preserved.",
+      "uses": [
+        "Photoshop files",
+        "Sharing a preview of a design"
+      ]
+    },
+    {
+      "slug": "svg",
+      "label": "SVG",
+      "category": "Documents and vector",
+      "extensions": [
+        "svg"
+      ],
+      "aliases": {},
+      "mime": [
+        "image/svg+xml"
+      ],
+      "magic": [
+        "3C737667",
+        "3C3F786D6C"
+      ],
+      "description": "Scalable vector graphic: infinitely sharp at any size, defined as text.",
+      "uses": [
+        "Logos",
+        "Icons",
+        "Web graphics"
+      ]
+    },
+    {
+      "slug": "pdf",
+      "label": "PDF",
+      "category": "Documents and vector",
+      "extensions": [
+        "pdf"
+      ],
+      "aliases": {},
+      "mime": [
+        "application/pdf"
+      ],
+      "magic": [
+        "25504446"
+      ],
+      "description": "Portable Document Format: the standard for sharing documents and scans.",
+      "uses": [
+        "Documents",
+        "Scans",
+        "E-books"
+      ]
+    }
+  ],
+  "targets_by_input": {
+    "jpg": [
+      "png",
+      "webp",
+      "avif",
+      "gif",
+      "tiff",
+      "bmp",
+      "ico",
+      "pdf",
+      "svg"
+    ],
+    "png": [
+      "jpg",
+      "webp",
+      "avif",
+      "gif",
+      "tiff",
+      "bmp",
+      "ico",
+      "pdf",
+      "svg"
+    ],
+    "webp": [
+      "jpg",
+      "png",
+      "avif",
+      "gif",
+      "tiff",
+      "bmp",
+      "ico",
+      "pdf"
+    ],
+    "avif": [
+      "jpg",
+      "png",
+      "webp",
+      "gif",
+      "tiff",
+      "bmp",
+      "ico",
+      "pdf"
+    ],
+    "gif": [
+      "jpg",
+      "png",
+      "webp",
+      "avif",
+      "tiff",
+      "bmp",
+      "ico",
+      "pdf"
+    ],
+    "tiff": [
+      "jpg",
+      "png",
+      "webp",
+      "avif",
+      "gif",
+      "bmp",
+      "ico",
+      "pdf",
+      "svg"
+    ],
+    "bmp": [
+      "jpg",
+      "png",
+      "webp",
+      "avif",
+      "gif",
+      "tiff",
+      "ico",
+      "pdf",
+      "svg"
+    ],
+    "heic": [
+      "jpg",
+      "png",
+      "webp",
+      "avif",
+      "gif",
+      "tiff",
+      "bmp",
+      "ico",
+      "pdf"
+    ],
+    "ico": [
+      "jpg",
+      "png",
+      "webp",
+      "avif",
+      "gif",
+      "tiff",
+      "bmp",
+      "pdf"
+    ],
+    "tga": [
+      "jpg",
+      "png",
+      "webp",
+      "avif",
+      "gif",
+      "tiff",
+      "bmp",
+      "ico",
+      "pdf"
+    ],
+    "psd": [
+      "jpg",
+      "png",
+      "webp",
+      "tiff",
+      "pdf"
+    ],
+    "svg": [
+      "png",
+      "jpg",
+      "webp",
+      "ico",
+      "pdf"
+    ],
+    "cr2": [
+      "jpg",
+      "png",
+      "tiff",
+      "webp",
+      "avif",
+      "bmp"
+    ],
+    "cr3": [
+      "jpg",
+      "png",
+      "tiff",
+      "webp",
+      "avif",
+      "bmp"
+    ],
+    "nef": [
+      "jpg",
+      "png",
+      "tiff",
+      "webp",
+      "avif",
+      "bmp"
+    ],
+    "arw": [
+      "jpg",
+      "png",
+      "tiff",
+      "webp",
+      "avif",
+      "bmp"
+    ],
+    "orf": [
+      "jpg",
+      "png",
+      "tiff",
+      "webp",
+      "avif",
+      "bmp"
+    ],
+    "raf": [
+      "jpg",
+      "png",
+      "tiff",
+      "webp",
+      "avif",
+      "bmp"
+    ],
+    "rw2": [
+      "jpg",
+      "png",
+      "tiff",
+      "webp",
+      "avif",
+      "bmp"
+    ],
+    "dng": [
+      "jpg",
+      "png",
+      "tiff",
+      "webp",
+      "avif",
+      "bmp"
+    ],
+    "pef": [
+      "jpg",
+      "png",
+      "tiff",
+      "webp",
+      "avif",
+      "bmp"
+    ],
+    "mp3": [
+      "wav",
+      "ogg",
+      "m4a",
+      "flac"
+    ],
+    "wav": [
+      "mp3",
+      "ogg",
+      "m4a",
+      "flac"
+    ],
+    "flac": [
+      "mp3",
+      "wav",
+      "ogg",
+      "m4a"
+    ],
+    "ogg": [
+      "mp3",
+      "wav",
+      "m4a",
+      "flac"
+    ],
+    "m4a": [
+      "mp3",
+      "wav",
+      "ogg",
+      "flac"
+    ],
+    "aac": [
+      "mp3",
+      "wav",
+      "ogg",
+      "m4a",
+      "flac"
+    ],
+    "opus": [
+      "mp3",
+      "wav",
+      "ogg",
+      "m4a",
+      "flac"
+    ],
+    "aiff": [
+      "mp3",
+      "wav",
+      "ogg",
+      "m4a",
+      "flac"
+    ],
+    "wma": [
+      "mp3",
+      "wav",
+      "ogg",
+      "m4a",
+      "flac"
+    ],
+    "mp4": [
+      "webm",
+      "mkv",
+      "mov",
+      "gif",
+      "mp3"
+    ],
+    "mkv": [
+      "mp4",
+      "webm",
+      "mov",
+      "gif",
+      "mp3"
+    ],
+    "mov": [
+      "mp4",
+      "webm",
+      "mkv",
+      "gif",
+      "mp3"
+    ],
+    "avi": [
+      "mp4",
+      "webm",
+      "mkv",
+      "mov",
+      "gif",
+      "mp3"
+    ],
+    "webm": [
+      "mp4",
+      "mkv",
+      "mov",
+      "gif",
+      "mp3"
+    ],
+    "wmv": [
+      "mp4",
+      "webm",
+      "mkv",
+      "mov",
+      "gif",
+      "mp3"
+    ],
+    "m4v": [
+      "mp4",
+      "webm",
+      "mkv",
+      "mov",
+      "gif",
+      "mp3"
+    ],
+    "3gp": [
+      "mp4",
+      "webm",
+      "mkv",
+      "mov",
+      "gif",
+      "mp3"
+    ],
+    "pdf": [
+      "jpg",
+      "png",
+      "webp",
+      "tiff"
+    ]
+  },
+  "pairs": [
+    {
+      "slug": "jpg-to-png",
+      "from": "jpg",
+      "to": "png",
+      "from_label": "JPG",
+      "to_label": "PNG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "jpg-to-webp",
+      "from": "jpg",
+      "to": "webp",
+      "from_label": "JPG",
+      "to_label": "WebP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "jpg-to-avif",
+      "from": "jpg",
+      "to": "avif",
+      "from_label": "JPG",
+      "to_label": "AVIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "jpg-to-gif",
+      "from": "jpg",
+      "to": "gif",
+      "from_label": "JPG",
+      "to_label": "GIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "jpg-to-tiff",
+      "from": "jpg",
+      "to": "tiff",
+      "from_label": "JPG",
+      "to_label": "TIFF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "jpg-to-bmp",
+      "from": "jpg",
+      "to": "bmp",
+      "from_label": "JPG",
+      "to_label": "BMP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "jpg-to-ico",
+      "from": "jpg",
+      "to": "ico",
+      "from_label": "JPG",
+      "to_label": "ICO",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "jpg-to-pdf",
+      "from": "jpg",
+      "to": "pdf",
+      "from_label": "JPG",
+      "to_label": "PDF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "png-to-jpg",
+      "from": "png",
+      "to": "jpg",
+      "from_label": "PNG",
+      "to_label": "JPG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "png-to-webp",
+      "from": "png",
+      "to": "webp",
+      "from_label": "PNG",
+      "to_label": "WebP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "png-to-avif",
+      "from": "png",
+      "to": "avif",
+      "from_label": "PNG",
+      "to_label": "AVIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "png-to-gif",
+      "from": "png",
+      "to": "gif",
+      "from_label": "PNG",
+      "to_label": "GIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "png-to-tiff",
+      "from": "png",
+      "to": "tiff",
+      "from_label": "PNG",
+      "to_label": "TIFF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "png-to-bmp",
+      "from": "png",
+      "to": "bmp",
+      "from_label": "PNG",
+      "to_label": "BMP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "png-to-ico",
+      "from": "png",
+      "to": "ico",
+      "from_label": "PNG",
+      "to_label": "ICO",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "png-to-pdf",
+      "from": "png",
+      "to": "pdf",
+      "from_label": "PNG",
+      "to_label": "PDF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "webp-to-jpg",
+      "from": "webp",
+      "to": "jpg",
+      "from_label": "WebP",
+      "to_label": "JPG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "webp-to-png",
+      "from": "webp",
+      "to": "png",
+      "from_label": "WebP",
+      "to_label": "PNG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "webp-to-avif",
+      "from": "webp",
+      "to": "avif",
+      "from_label": "WebP",
+      "to_label": "AVIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "webp-to-gif",
+      "from": "webp",
+      "to": "gif",
+      "from_label": "WebP",
+      "to_label": "GIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "webp-to-tiff",
+      "from": "webp",
+      "to": "tiff",
+      "from_label": "WebP",
+      "to_label": "TIFF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "webp-to-bmp",
+      "from": "webp",
+      "to": "bmp",
+      "from_label": "WebP",
+      "to_label": "BMP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "webp-to-ico",
+      "from": "webp",
+      "to": "ico",
+      "from_label": "WebP",
+      "to_label": "ICO",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "webp-to-pdf",
+      "from": "webp",
+      "to": "pdf",
+      "from_label": "WebP",
+      "to_label": "PDF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avif-to-jpg",
+      "from": "avif",
+      "to": "jpg",
+      "from_label": "AVIF",
+      "to_label": "JPG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avif-to-png",
+      "from": "avif",
+      "to": "png",
+      "from_label": "AVIF",
+      "to_label": "PNG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avif-to-webp",
+      "from": "avif",
+      "to": "webp",
+      "from_label": "AVIF",
+      "to_label": "WebP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avif-to-gif",
+      "from": "avif",
+      "to": "gif",
+      "from_label": "AVIF",
+      "to_label": "GIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avif-to-tiff",
+      "from": "avif",
+      "to": "tiff",
+      "from_label": "AVIF",
+      "to_label": "TIFF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avif-to-bmp",
+      "from": "avif",
+      "to": "bmp",
+      "from_label": "AVIF",
+      "to_label": "BMP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avif-to-ico",
+      "from": "avif",
+      "to": "ico",
+      "from_label": "AVIF",
+      "to_label": "ICO",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avif-to-pdf",
+      "from": "avif",
+      "to": "pdf",
+      "from_label": "AVIF",
+      "to_label": "PDF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "gif-to-jpg",
+      "from": "gif",
+      "to": "jpg",
+      "from_label": "GIF",
+      "to_label": "JPG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "gif-to-png",
+      "from": "gif",
+      "to": "png",
+      "from_label": "GIF",
+      "to_label": "PNG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "gif-to-webp",
+      "from": "gif",
+      "to": "webp",
+      "from_label": "GIF",
+      "to_label": "WebP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "gif-to-avif",
+      "from": "gif",
+      "to": "avif",
+      "from_label": "GIF",
+      "to_label": "AVIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "gif-to-tiff",
+      "from": "gif",
+      "to": "tiff",
+      "from_label": "GIF",
+      "to_label": "TIFF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "gif-to-bmp",
+      "from": "gif",
+      "to": "bmp",
+      "from_label": "GIF",
+      "to_label": "BMP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "gif-to-ico",
+      "from": "gif",
+      "to": "ico",
+      "from_label": "GIF",
+      "to_label": "ICO",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "gif-to-pdf",
+      "from": "gif",
+      "to": "pdf",
+      "from_label": "GIF",
+      "to_label": "PDF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tiff-to-jpg",
+      "from": "tiff",
+      "to": "jpg",
+      "from_label": "TIFF",
+      "to_label": "JPG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tiff-to-png",
+      "from": "tiff",
+      "to": "png",
+      "from_label": "TIFF",
+      "to_label": "PNG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tiff-to-webp",
+      "from": "tiff",
+      "to": "webp",
+      "from_label": "TIFF",
+      "to_label": "WebP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tiff-to-avif",
+      "from": "tiff",
+      "to": "avif",
+      "from_label": "TIFF",
+      "to_label": "AVIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tiff-to-gif",
+      "from": "tiff",
+      "to": "gif",
+      "from_label": "TIFF",
+      "to_label": "GIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tiff-to-bmp",
+      "from": "tiff",
+      "to": "bmp",
+      "from_label": "TIFF",
+      "to_label": "BMP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tiff-to-ico",
+      "from": "tiff",
+      "to": "ico",
+      "from_label": "TIFF",
+      "to_label": "ICO",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tiff-to-pdf",
+      "from": "tiff",
+      "to": "pdf",
+      "from_label": "TIFF",
+      "to_label": "PDF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "bmp-to-jpg",
+      "from": "bmp",
+      "to": "jpg",
+      "from_label": "BMP",
+      "to_label": "JPG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "bmp-to-png",
+      "from": "bmp",
+      "to": "png",
+      "from_label": "BMP",
+      "to_label": "PNG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "bmp-to-webp",
+      "from": "bmp",
+      "to": "webp",
+      "from_label": "BMP",
+      "to_label": "WebP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "bmp-to-avif",
+      "from": "bmp",
+      "to": "avif",
+      "from_label": "BMP",
+      "to_label": "AVIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "bmp-to-gif",
+      "from": "bmp",
+      "to": "gif",
+      "from_label": "BMP",
+      "to_label": "GIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "bmp-to-tiff",
+      "from": "bmp",
+      "to": "tiff",
+      "from_label": "BMP",
+      "to_label": "TIFF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "bmp-to-ico",
+      "from": "bmp",
+      "to": "ico",
+      "from_label": "BMP",
+      "to_label": "ICO",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "bmp-to-pdf",
+      "from": "bmp",
+      "to": "pdf",
+      "from_label": "BMP",
+      "to_label": "PDF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "heic-to-jpg",
+      "from": "heic",
+      "to": "jpg",
+      "from_label": "HEIC",
+      "to_label": "JPG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "heic-to-png",
+      "from": "heic",
+      "to": "png",
+      "from_label": "HEIC",
+      "to_label": "PNG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "heic-to-webp",
+      "from": "heic",
+      "to": "webp",
+      "from_label": "HEIC",
+      "to_label": "WebP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "heic-to-avif",
+      "from": "heic",
+      "to": "avif",
+      "from_label": "HEIC",
+      "to_label": "AVIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "heic-to-gif",
+      "from": "heic",
+      "to": "gif",
+      "from_label": "HEIC",
+      "to_label": "GIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "heic-to-tiff",
+      "from": "heic",
+      "to": "tiff",
+      "from_label": "HEIC",
+      "to_label": "TIFF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "heic-to-bmp",
+      "from": "heic",
+      "to": "bmp",
+      "from_label": "HEIC",
+      "to_label": "BMP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "heic-to-ico",
+      "from": "heic",
+      "to": "ico",
+      "from_label": "HEIC",
+      "to_label": "ICO",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "heic-to-pdf",
+      "from": "heic",
+      "to": "pdf",
+      "from_label": "HEIC",
+      "to_label": "PDF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "ico-to-jpg",
+      "from": "ico",
+      "to": "jpg",
+      "from_label": "ICO",
+      "to_label": "JPG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "ico-to-png",
+      "from": "ico",
+      "to": "png",
+      "from_label": "ICO",
+      "to_label": "PNG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "ico-to-webp",
+      "from": "ico",
+      "to": "webp",
+      "from_label": "ICO",
+      "to_label": "WebP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "ico-to-avif",
+      "from": "ico",
+      "to": "avif",
+      "from_label": "ICO",
+      "to_label": "AVIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "ico-to-gif",
+      "from": "ico",
+      "to": "gif",
+      "from_label": "ICO",
+      "to_label": "GIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "ico-to-tiff",
+      "from": "ico",
+      "to": "tiff",
+      "from_label": "ICO",
+      "to_label": "TIFF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "ico-to-bmp",
+      "from": "ico",
+      "to": "bmp",
+      "from_label": "ICO",
+      "to_label": "BMP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "ico-to-pdf",
+      "from": "ico",
+      "to": "pdf",
+      "from_label": "ICO",
+      "to_label": "PDF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tga-to-jpg",
+      "from": "tga",
+      "to": "jpg",
+      "from_label": "TGA",
+      "to_label": "JPG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tga-to-png",
+      "from": "tga",
+      "to": "png",
+      "from_label": "TGA",
+      "to_label": "PNG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tga-to-webp",
+      "from": "tga",
+      "to": "webp",
+      "from_label": "TGA",
+      "to_label": "WebP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tga-to-avif",
+      "from": "tga",
+      "to": "avif",
+      "from_label": "TGA",
+      "to_label": "AVIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tga-to-gif",
+      "from": "tga",
+      "to": "gif",
+      "from_label": "TGA",
+      "to_label": "GIF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tga-to-tiff",
+      "from": "tga",
+      "to": "tiff",
+      "from_label": "TGA",
+      "to_label": "TIFF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tga-to-bmp",
+      "from": "tga",
+      "to": "bmp",
+      "from_label": "TGA",
+      "to_label": "BMP",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tga-to-ico",
+      "from": "tga",
+      "to": "ico",
+      "from_label": "TGA",
+      "to_label": "ICO",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Images",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tga-to-pdf",
+      "from": "tga",
+      "to": "pdf",
+      "from_label": "TGA",
+      "to_label": "PDF",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "raster",
+      "engine": "vips",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "psd-to-jpg",
+      "from": "psd",
+      "to": "jpg",
+      "from_label": "PSD",
+      "to_label": "JPG",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Images",
+      "route": "psd",
+      "engine": "psd",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "psd-to-png",
+      "from": "psd",
+      "to": "png",
+      "from_label": "PSD",
+      "to_label": "PNG",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Images",
+      "route": "psd",
+      "engine": "psd",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "psd-to-webp",
+      "from": "psd",
+      "to": "webp",
+      "from_label": "PSD",
+      "to_label": "WebP",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Images",
+      "route": "psd",
+      "engine": "psd",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "psd-to-tiff",
+      "from": "psd",
+      "to": "tiff",
+      "from_label": "PSD",
+      "to_label": "TIFF",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Images",
+      "route": "psd",
+      "engine": "psd",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "psd-to-pdf",
+      "from": "psd",
+      "to": "pdf",
+      "from_label": "PSD",
+      "to_label": "PDF",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Documents and vector",
+      "route": "psd",
+      "engine": "psd",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "svg-to-png",
+      "from": "svg",
+      "to": "png",
+      "from_label": "SVG",
+      "to_label": "PNG",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Images",
+      "route": "svg",
+      "engine": "svg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "svg-to-jpg",
+      "from": "svg",
+      "to": "jpg",
+      "from_label": "SVG",
+      "to_label": "JPG",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Images",
+      "route": "svg",
+      "engine": "svg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "svg-to-webp",
+      "from": "svg",
+      "to": "webp",
+      "from_label": "SVG",
+      "to_label": "WebP",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Images",
+      "route": "svg",
+      "engine": "svg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "svg-to-ico",
+      "from": "svg",
+      "to": "ico",
+      "from_label": "SVG",
+      "to_label": "ICO",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Images",
+      "route": "svg",
+      "engine": "svg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "svg-to-pdf",
+      "from": "svg",
+      "to": "pdf",
+      "from_label": "SVG",
+      "to_label": "PDF",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Documents and vector",
+      "route": "svg",
+      "engine": "svg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "jpg-to-svg",
+      "from": "jpg",
+      "to": "svg",
+      "from_label": "JPG",
+      "to_label": "SVG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "trace",
+      "engine": "trace",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "png-to-svg",
+      "from": "png",
+      "to": "svg",
+      "from_label": "PNG",
+      "to_label": "SVG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "trace",
+      "engine": "trace",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "bmp-to-svg",
+      "from": "bmp",
+      "to": "svg",
+      "from_label": "BMP",
+      "to_label": "SVG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "trace",
+      "engine": "trace",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "tiff-to-svg",
+      "from": "tiff",
+      "to": "svg",
+      "from_label": "TIFF",
+      "to_label": "SVG",
+      "category": "Images",
+      "from_category": "Images",
+      "to_category": "Documents and vector",
+      "route": "trace",
+      "engine": "trace",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "cr2-to-jpg",
+      "from": "cr2",
+      "to": "jpg",
+      "from_label": "CR2",
+      "to_label": "JPG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "cr2-to-png",
+      "from": "cr2",
+      "to": "png",
+      "from_label": "CR2",
+      "to_label": "PNG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "cr2-to-tiff",
+      "from": "cr2",
+      "to": "tiff",
+      "from_label": "CR2",
+      "to_label": "TIFF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "cr2-to-webp",
+      "from": "cr2",
+      "to": "webp",
+      "from_label": "CR2",
+      "to_label": "WebP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "cr2-to-avif",
+      "from": "cr2",
+      "to": "avif",
+      "from_label": "CR2",
+      "to_label": "AVIF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "cr2-to-bmp",
+      "from": "cr2",
+      "to": "bmp",
+      "from_label": "CR2",
+      "to_label": "BMP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "cr3-to-jpg",
+      "from": "cr3",
+      "to": "jpg",
+      "from_label": "CR3",
+      "to_label": "JPG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "cr3-to-png",
+      "from": "cr3",
+      "to": "png",
+      "from_label": "CR3",
+      "to_label": "PNG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "cr3-to-tiff",
+      "from": "cr3",
+      "to": "tiff",
+      "from_label": "CR3",
+      "to_label": "TIFF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "cr3-to-webp",
+      "from": "cr3",
+      "to": "webp",
+      "from_label": "CR3",
+      "to_label": "WebP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "cr3-to-avif",
+      "from": "cr3",
+      "to": "avif",
+      "from_label": "CR3",
+      "to_label": "AVIF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "cr3-to-bmp",
+      "from": "cr3",
+      "to": "bmp",
+      "from_label": "CR3",
+      "to_label": "BMP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "nef-to-jpg",
+      "from": "nef",
+      "to": "jpg",
+      "from_label": "NEF",
+      "to_label": "JPG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "nef-to-png",
+      "from": "nef",
+      "to": "png",
+      "from_label": "NEF",
+      "to_label": "PNG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "nef-to-tiff",
+      "from": "nef",
+      "to": "tiff",
+      "from_label": "NEF",
+      "to_label": "TIFF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "nef-to-webp",
+      "from": "nef",
+      "to": "webp",
+      "from_label": "NEF",
+      "to_label": "WebP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "nef-to-avif",
+      "from": "nef",
+      "to": "avif",
+      "from_label": "NEF",
+      "to_label": "AVIF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "nef-to-bmp",
+      "from": "nef",
+      "to": "bmp",
+      "from_label": "NEF",
+      "to_label": "BMP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "arw-to-jpg",
+      "from": "arw",
+      "to": "jpg",
+      "from_label": "ARW",
+      "to_label": "JPG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "arw-to-png",
+      "from": "arw",
+      "to": "png",
+      "from_label": "ARW",
+      "to_label": "PNG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "arw-to-tiff",
+      "from": "arw",
+      "to": "tiff",
+      "from_label": "ARW",
+      "to_label": "TIFF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "arw-to-webp",
+      "from": "arw",
+      "to": "webp",
+      "from_label": "ARW",
+      "to_label": "WebP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "arw-to-avif",
+      "from": "arw",
+      "to": "avif",
+      "from_label": "ARW",
+      "to_label": "AVIF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "arw-to-bmp",
+      "from": "arw",
+      "to": "bmp",
+      "from_label": "ARW",
+      "to_label": "BMP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "orf-to-jpg",
+      "from": "orf",
+      "to": "jpg",
+      "from_label": "ORF",
+      "to_label": "JPG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "orf-to-png",
+      "from": "orf",
+      "to": "png",
+      "from_label": "ORF",
+      "to_label": "PNG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "orf-to-tiff",
+      "from": "orf",
+      "to": "tiff",
+      "from_label": "ORF",
+      "to_label": "TIFF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "orf-to-webp",
+      "from": "orf",
+      "to": "webp",
+      "from_label": "ORF",
+      "to_label": "WebP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "orf-to-avif",
+      "from": "orf",
+      "to": "avif",
+      "from_label": "ORF",
+      "to_label": "AVIF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "orf-to-bmp",
+      "from": "orf",
+      "to": "bmp",
+      "from_label": "ORF",
+      "to_label": "BMP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "raf-to-jpg",
+      "from": "raf",
+      "to": "jpg",
+      "from_label": "RAF",
+      "to_label": "JPG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "raf-to-png",
+      "from": "raf",
+      "to": "png",
+      "from_label": "RAF",
+      "to_label": "PNG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "raf-to-tiff",
+      "from": "raf",
+      "to": "tiff",
+      "from_label": "RAF",
+      "to_label": "TIFF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "raf-to-webp",
+      "from": "raf",
+      "to": "webp",
+      "from_label": "RAF",
+      "to_label": "WebP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "raf-to-avif",
+      "from": "raf",
+      "to": "avif",
+      "from_label": "RAF",
+      "to_label": "AVIF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "raf-to-bmp",
+      "from": "raf",
+      "to": "bmp",
+      "from_label": "RAF",
+      "to_label": "BMP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "rw2-to-jpg",
+      "from": "rw2",
+      "to": "jpg",
+      "from_label": "RW2",
+      "to_label": "JPG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "rw2-to-png",
+      "from": "rw2",
+      "to": "png",
+      "from_label": "RW2",
+      "to_label": "PNG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "rw2-to-tiff",
+      "from": "rw2",
+      "to": "tiff",
+      "from_label": "RW2",
+      "to_label": "TIFF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "rw2-to-webp",
+      "from": "rw2",
+      "to": "webp",
+      "from_label": "RW2",
+      "to_label": "WebP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "rw2-to-avif",
+      "from": "rw2",
+      "to": "avif",
+      "from_label": "RW2",
+      "to_label": "AVIF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "rw2-to-bmp",
+      "from": "rw2",
+      "to": "bmp",
+      "from_label": "RW2",
+      "to_label": "BMP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "dng-to-jpg",
+      "from": "dng",
+      "to": "jpg",
+      "from_label": "DNG",
+      "to_label": "JPG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "dng-to-png",
+      "from": "dng",
+      "to": "png",
+      "from_label": "DNG",
+      "to_label": "PNG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "dng-to-tiff",
+      "from": "dng",
+      "to": "tiff",
+      "from_label": "DNG",
+      "to_label": "TIFF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "dng-to-webp",
+      "from": "dng",
+      "to": "webp",
+      "from_label": "DNG",
+      "to_label": "WebP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "dng-to-avif",
+      "from": "dng",
+      "to": "avif",
+      "from_label": "DNG",
+      "to_label": "AVIF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "dng-to-bmp",
+      "from": "dng",
+      "to": "bmp",
+      "from_label": "DNG",
+      "to_label": "BMP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "pef-to-jpg",
+      "from": "pef",
+      "to": "jpg",
+      "from_label": "PEF",
+      "to_label": "JPG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "pef-to-png",
+      "from": "pef",
+      "to": "png",
+      "from_label": "PEF",
+      "to_label": "PNG",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "pef-to-tiff",
+      "from": "pef",
+      "to": "tiff",
+      "from_label": "PEF",
+      "to_label": "TIFF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "pef-to-webp",
+      "from": "pef",
+      "to": "webp",
+      "from_label": "PEF",
+      "to_label": "WebP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "pef-to-avif",
+      "from": "pef",
+      "to": "avif",
+      "from_label": "PEF",
+      "to_label": "AVIF",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "pef-to-bmp",
+      "from": "pef",
+      "to": "bmp",
+      "from_label": "PEF",
+      "to_label": "BMP",
+      "category": "Camera RAW",
+      "from_category": "Camera RAW",
+      "to_category": "Images",
+      "route": "raw",
+      "engine": "raw",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mp3-to-wav",
+      "from": "mp3",
+      "to": "wav",
+      "from_label": "MP3",
+      "to_label": "WAV",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mp3-to-ogg",
+      "from": "mp3",
+      "to": "ogg",
+      "from_label": "MP3",
+      "to_label": "OGG",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mp3-to-m4a",
+      "from": "mp3",
+      "to": "m4a",
+      "from_label": "MP3",
+      "to_label": "M4A",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mp3-to-flac",
+      "from": "mp3",
+      "to": "flac",
+      "from_label": "MP3",
+      "to_label": "FLAC",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wav-to-mp3",
+      "from": "wav",
+      "to": "mp3",
+      "from_label": "WAV",
+      "to_label": "MP3",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wav-to-ogg",
+      "from": "wav",
+      "to": "ogg",
+      "from_label": "WAV",
+      "to_label": "OGG",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wav-to-m4a",
+      "from": "wav",
+      "to": "m4a",
+      "from_label": "WAV",
+      "to_label": "M4A",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wav-to-flac",
+      "from": "wav",
+      "to": "flac",
+      "from_label": "WAV",
+      "to_label": "FLAC",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "flac-to-mp3",
+      "from": "flac",
+      "to": "mp3",
+      "from_label": "FLAC",
+      "to_label": "MP3",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "flac-to-wav",
+      "from": "flac",
+      "to": "wav",
+      "from_label": "FLAC",
+      "to_label": "WAV",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "flac-to-ogg",
+      "from": "flac",
+      "to": "ogg",
+      "from_label": "FLAC",
+      "to_label": "OGG",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "flac-to-m4a",
+      "from": "flac",
+      "to": "m4a",
+      "from_label": "FLAC",
+      "to_label": "M4A",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "ogg-to-mp3",
+      "from": "ogg",
+      "to": "mp3",
+      "from_label": "OGG",
+      "to_label": "MP3",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "ogg-to-wav",
+      "from": "ogg",
+      "to": "wav",
+      "from_label": "OGG",
+      "to_label": "WAV",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "ogg-to-m4a",
+      "from": "ogg",
+      "to": "m4a",
+      "from_label": "OGG",
+      "to_label": "M4A",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "ogg-to-flac",
+      "from": "ogg",
+      "to": "flac",
+      "from_label": "OGG",
+      "to_label": "FLAC",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "m4a-to-mp3",
+      "from": "m4a",
+      "to": "mp3",
+      "from_label": "M4A",
+      "to_label": "MP3",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "m4a-to-wav",
+      "from": "m4a",
+      "to": "wav",
+      "from_label": "M4A",
+      "to_label": "WAV",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "m4a-to-ogg",
+      "from": "m4a",
+      "to": "ogg",
+      "from_label": "M4A",
+      "to_label": "OGG",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "m4a-to-flac",
+      "from": "m4a",
+      "to": "flac",
+      "from_label": "M4A",
+      "to_label": "FLAC",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "aac-to-mp3",
+      "from": "aac",
+      "to": "mp3",
+      "from_label": "AAC",
+      "to_label": "MP3",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "aac-to-wav",
+      "from": "aac",
+      "to": "wav",
+      "from_label": "AAC",
+      "to_label": "WAV",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "aac-to-ogg",
+      "from": "aac",
+      "to": "ogg",
+      "from_label": "AAC",
+      "to_label": "OGG",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "aac-to-m4a",
+      "from": "aac",
+      "to": "m4a",
+      "from_label": "AAC",
+      "to_label": "M4A",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "aac-to-flac",
+      "from": "aac",
+      "to": "flac",
+      "from_label": "AAC",
+      "to_label": "FLAC",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "opus-to-mp3",
+      "from": "opus",
+      "to": "mp3",
+      "from_label": "Opus",
+      "to_label": "MP3",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "opus-to-wav",
+      "from": "opus",
+      "to": "wav",
+      "from_label": "Opus",
+      "to_label": "WAV",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "opus-to-ogg",
+      "from": "opus",
+      "to": "ogg",
+      "from_label": "Opus",
+      "to_label": "OGG",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "opus-to-m4a",
+      "from": "opus",
+      "to": "m4a",
+      "from_label": "Opus",
+      "to_label": "M4A",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "opus-to-flac",
+      "from": "opus",
+      "to": "flac",
+      "from_label": "Opus",
+      "to_label": "FLAC",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "aiff-to-mp3",
+      "from": "aiff",
+      "to": "mp3",
+      "from_label": "AIFF",
+      "to_label": "MP3",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "aiff-to-wav",
+      "from": "aiff",
+      "to": "wav",
+      "from_label": "AIFF",
+      "to_label": "WAV",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "aiff-to-ogg",
+      "from": "aiff",
+      "to": "ogg",
+      "from_label": "AIFF",
+      "to_label": "OGG",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "aiff-to-m4a",
+      "from": "aiff",
+      "to": "m4a",
+      "from_label": "AIFF",
+      "to_label": "M4A",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "aiff-to-flac",
+      "from": "aiff",
+      "to": "flac",
+      "from_label": "AIFF",
+      "to_label": "FLAC",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wma-to-mp3",
+      "from": "wma",
+      "to": "mp3",
+      "from_label": "WMA",
+      "to_label": "MP3",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wma-to-wav",
+      "from": "wma",
+      "to": "wav",
+      "from_label": "WMA",
+      "to_label": "WAV",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wma-to-ogg",
+      "from": "wma",
+      "to": "ogg",
+      "from_label": "WMA",
+      "to_label": "OGG",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wma-to-m4a",
+      "from": "wma",
+      "to": "m4a",
+      "from_label": "WMA",
+      "to_label": "M4A",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wma-to-flac",
+      "from": "wma",
+      "to": "flac",
+      "from_label": "WMA",
+      "to_label": "FLAC",
+      "category": "Audio",
+      "from_category": "Audio",
+      "to_category": "Audio",
+      "route": "audio",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mp4-to-webm",
+      "from": "mp4",
+      "to": "webm",
+      "from_label": "MP4",
+      "to_label": "WebM",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mp4-to-mkv",
+      "from": "mp4",
+      "to": "mkv",
+      "from_label": "MP4",
+      "to_label": "MKV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mp4-to-mov",
+      "from": "mp4",
+      "to": "mov",
+      "from_label": "MP4",
+      "to_label": "MOV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mp4-to-gif",
+      "from": "mp4",
+      "to": "gif",
+      "from_label": "MP4",
+      "to_label": "GIF",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Images",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mp4-to-mp3",
+      "from": "mp4",
+      "to": "mp3",
+      "from_label": "MP4",
+      "to_label": "MP3",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Audio",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mkv-to-mp4",
+      "from": "mkv",
+      "to": "mp4",
+      "from_label": "MKV",
+      "to_label": "MP4",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mkv-to-webm",
+      "from": "mkv",
+      "to": "webm",
+      "from_label": "MKV",
+      "to_label": "WebM",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mkv-to-mov",
+      "from": "mkv",
+      "to": "mov",
+      "from_label": "MKV",
+      "to_label": "MOV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mkv-to-gif",
+      "from": "mkv",
+      "to": "gif",
+      "from_label": "MKV",
+      "to_label": "GIF",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Images",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mkv-to-mp3",
+      "from": "mkv",
+      "to": "mp3",
+      "from_label": "MKV",
+      "to_label": "MP3",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Audio",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mov-to-mp4",
+      "from": "mov",
+      "to": "mp4",
+      "from_label": "MOV",
+      "to_label": "MP4",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mov-to-webm",
+      "from": "mov",
+      "to": "webm",
+      "from_label": "MOV",
+      "to_label": "WebM",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mov-to-mkv",
+      "from": "mov",
+      "to": "mkv",
+      "from_label": "MOV",
+      "to_label": "MKV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mov-to-gif",
+      "from": "mov",
+      "to": "gif",
+      "from_label": "MOV",
+      "to_label": "GIF",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Images",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "mov-to-mp3",
+      "from": "mov",
+      "to": "mp3",
+      "from_label": "MOV",
+      "to_label": "MP3",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Audio",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avi-to-mp4",
+      "from": "avi",
+      "to": "mp4",
+      "from_label": "AVI",
+      "to_label": "MP4",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avi-to-webm",
+      "from": "avi",
+      "to": "webm",
+      "from_label": "AVI",
+      "to_label": "WebM",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avi-to-mkv",
+      "from": "avi",
+      "to": "mkv",
+      "from_label": "AVI",
+      "to_label": "MKV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avi-to-mov",
+      "from": "avi",
+      "to": "mov",
+      "from_label": "AVI",
+      "to_label": "MOV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avi-to-gif",
+      "from": "avi",
+      "to": "gif",
+      "from_label": "AVI",
+      "to_label": "GIF",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Images",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "avi-to-mp3",
+      "from": "avi",
+      "to": "mp3",
+      "from_label": "AVI",
+      "to_label": "MP3",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Audio",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "webm-to-mp4",
+      "from": "webm",
+      "to": "mp4",
+      "from_label": "WebM",
+      "to_label": "MP4",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "webm-to-mkv",
+      "from": "webm",
+      "to": "mkv",
+      "from_label": "WebM",
+      "to_label": "MKV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "webm-to-mov",
+      "from": "webm",
+      "to": "mov",
+      "from_label": "WebM",
+      "to_label": "MOV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "webm-to-gif",
+      "from": "webm",
+      "to": "gif",
+      "from_label": "WebM",
+      "to_label": "GIF",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Images",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "webm-to-mp3",
+      "from": "webm",
+      "to": "mp3",
+      "from_label": "WebM",
+      "to_label": "MP3",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Audio",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wmv-to-mp4",
+      "from": "wmv",
+      "to": "mp4",
+      "from_label": "WMV",
+      "to_label": "MP4",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wmv-to-webm",
+      "from": "wmv",
+      "to": "webm",
+      "from_label": "WMV",
+      "to_label": "WebM",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wmv-to-mkv",
+      "from": "wmv",
+      "to": "mkv",
+      "from_label": "WMV",
+      "to_label": "MKV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wmv-to-mov",
+      "from": "wmv",
+      "to": "mov",
+      "from_label": "WMV",
+      "to_label": "MOV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wmv-to-gif",
+      "from": "wmv",
+      "to": "gif",
+      "from_label": "WMV",
+      "to_label": "GIF",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Images",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "wmv-to-mp3",
+      "from": "wmv",
+      "to": "mp3",
+      "from_label": "WMV",
+      "to_label": "MP3",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Audio",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "m4v-to-mp4",
+      "from": "m4v",
+      "to": "mp4",
+      "from_label": "M4V",
+      "to_label": "MP4",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "m4v-to-webm",
+      "from": "m4v",
+      "to": "webm",
+      "from_label": "M4V",
+      "to_label": "WebM",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "m4v-to-mkv",
+      "from": "m4v",
+      "to": "mkv",
+      "from_label": "M4V",
+      "to_label": "MKV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "m4v-to-mov",
+      "from": "m4v",
+      "to": "mov",
+      "from_label": "M4V",
+      "to_label": "MOV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "m4v-to-gif",
+      "from": "m4v",
+      "to": "gif",
+      "from_label": "M4V",
+      "to_label": "GIF",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Images",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "m4v-to-mp3",
+      "from": "m4v",
+      "to": "mp3",
+      "from_label": "M4V",
+      "to_label": "MP3",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Audio",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "3gp-to-mp4",
+      "from": "3gp",
+      "to": "mp4",
+      "from_label": "3GP",
+      "to_label": "MP4",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "3gp-to-webm",
+      "from": "3gp",
+      "to": "webm",
+      "from_label": "3GP",
+      "to_label": "WebM",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "3gp-to-mkv",
+      "from": "3gp",
+      "to": "mkv",
+      "from_label": "3GP",
+      "to_label": "MKV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "3gp-to-mov",
+      "from": "3gp",
+      "to": "mov",
+      "from_label": "3GP",
+      "to_label": "MOV",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Video",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "3gp-to-gif",
+      "from": "3gp",
+      "to": "gif",
+      "from_label": "3GP",
+      "to_label": "GIF",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Images",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "3gp-to-mp3",
+      "from": "3gp",
+      "to": "mp3",
+      "from_label": "3GP",
+      "to_label": "MP3",
+      "category": "Video",
+      "from_category": "Video",
+      "to_category": "Audio",
+      "route": "video",
+      "engine": "ffmpeg",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "pdf-to-jpg",
+      "from": "pdf",
+      "to": "jpg",
+      "from_label": "PDF",
+      "to_label": "JPG",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Images",
+      "route": "pdf",
+      "engine": "pdf",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "pdf-to-png",
+      "from": "pdf",
+      "to": "png",
+      "from_label": "PDF",
+      "to_label": "PNG",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Images",
+      "route": "pdf",
+      "engine": "pdf",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "pdf-to-webp",
+      "from": "pdf",
+      "to": "webp",
+      "from_label": "PDF",
+      "to_label": "WebP",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Images",
+      "route": "pdf",
+      "engine": "pdf",
+      "status": "healthy",
+      "last_error": null
+    },
+    {
+      "slug": "pdf-to-tiff",
+      "from": "pdf",
+      "to": "tiff",
+      "from_label": "PDF",
+      "to_label": "TIFF",
+      "category": "Documents and vector",
+      "from_category": "Documents and vector",
+      "to_category": "Images",
+      "route": "pdf",
+      "engine": "pdf",
+      "status": "healthy",
+      "last_error": null
+    }
+  ],
+  "settings_schema": {
+    "image": [
+      {
+        "key": "quality",
+        "kind": "slider",
+        "label": "Quality",
+        "min": 1,
+        "max": 100,
+        "default": null,
+        "hint": "Higher quality means a larger file. Recommended: JPG 85, WebP 80, AVIF 60."
+      },
+      {
+        "key": "max_width",
+        "kind": "number",
+        "label": "Max width (px)",
+        "min": 1,
+        "max": 10000,
+        "default": null,
+        "hint": "Leave empty to keep the original width."
+      },
+      {
+        "key": "max_height",
+        "kind": "number",
+        "label": "Max height (px)",
+        "min": 1,
+        "max": 10000,
+        "default": null,
+        "hint": "Leave empty to keep the original height."
+      },
+      {
+        "key": "resolution",
+        "kind": "select",
+        "label": "Resolution",
+        "options": [
+          "Original",
+          "1080p",
+          "720p",
+          "480p"
+        ],
+        "default": "Original",
+        "hint": "Downscale the longest side to a preset size."
+      },
+      {
+        "key": "background",
+        "kind": "color",
+        "label": "Background colour",
+        "default": "#FFFFFF",
+        "hint": "Transparency is flattened onto this colour when the target (JPG, BMP) has no transparency."
+      },
+      {
+        "key": "strip_metadata",
+        "kind": "switch",
+        "label": "Strip metadata",
+        "default": true,
+        "hint": "Removes location (GPS) and other metadata. Turn off to keep it."
+      }
+    ],
+    "audio": [
+      {
+        "key": "bitrate_kbps",
+        "kind": "select",
+        "label": "Bitrate",
+        "options": [
+          96,
+          128,
+          192,
+          256,
+          320
+        ],
+        "default": 192,
+        "hint": "Recommended: 192 kbps for MP3 and M4A."
+      },
+      {
+        "key": "sample_rate",
+        "kind": "select",
+        "label": "Sample rate",
+        "options": [
+          22050,
+          32000,
+          44100,
+          48000
+        ],
+        "default": null,
+        "hint": "Kept from the source by default, capped at 48 kHz."
+      },
+      {
+        "key": "channels",
+        "kind": "select",
+        "label": "Channels",
+        "options": [
+          "keep",
+          "stereo",
+          "mono"
+        ],
+        "default": "keep",
+        "hint": "Keep the source channels, or force stereo or mono."
+      }
+    ],
+    "video": [
+      {
+        "key": "crf",
+        "kind": "slider",
+        "label": "Quality (CRF)",
+        "min": 0,
+        "max": 51,
+        "default": null,
+        "hint": "Lower is better quality and a larger file. Recommended: MP4 23, WebM 32."
+      },
+      {
+        "key": "preset",
+        "kind": "select",
+        "label": "Encoding preset",
+        "options": [
+          "ultrafast",
+          "fast",
+          "medium",
+          "slow"
+        ],
+        "default": "medium",
+        "hint": "Slower presets compress better but take longer."
+      },
+      {
+        "key": "resolution",
+        "kind": "select",
+        "label": "Resolution",
+        "options": [
+          "Original",
+          "1080p",
+          "720p",
+          "480p"
+        ],
+        "default": "Original",
+        "hint": "Downscale the video to a preset height."
+      },
+      {
+        "key": "trim_start",
+        "kind": "number",
+        "label": "Trim start (seconds)",
+        "min": 0,
+        "default": null,
+        "hint": "Start the output at this time."
+      },
+      {
+        "key": "trim_end",
+        "kind": "number",
+        "label": "Trim end (seconds)",
+        "min": 0,
+        "default": null,
+        "hint": "End the output at this time."
+      }
+    ],
+    "pdf": [
+      {
+        "key": "dpi",
+        "kind": "select",
+        "label": "Render DPI",
+        "options": [
+          72,
+          96,
+          150,
+          200,
+          300
+        ],
+        "default": 150,
+        "hint": "Higher DPI means sharper images and larger files. Range 72-300."
+      },
+      {
+        "key": "page_range",
+        "kind": "text",
+        "label": "Page range",
+        "default": null,
+        "hint": "For example 1-3 or 2,5. Leave empty for all pages (50-page cap)."
+      }
+    ],
+    "trace": [
+      {
+        "key": "trace_preset",
+        "kind": "select",
+        "label": "Trace preset",
+        "options": [
+          "logo",
+          "photo",
+          "line_art"
+        ],
+        "default": "logo",
+        "hint": "Logo: clean shapes. Photo: detailed. Line art: thin strokes."
+      }
+    ]
+  },
+  "presets": {
+    "image": {
+      "Web": {
+        "quality": 80,
+        "resolution": "1080p",
+        "strip_metadata": true
+      },
+      "Print": {
+        "quality": 95,
+        "resolution": "Original",
+        "strip_metadata": false
+      },
+      "Social": {
+        "quality": 82,
+        "resolution": "1080p",
+        "strip_metadata": true
+      },
+      "Archival": {
+        "quality": 100,
+        "resolution": "Original",
+        "strip_metadata": false
+      }
+    },
+    "audio": {
+      "Web": {
+        "bitrate_kbps": 128
+      },
+      "Standard": {
+        "bitrate_kbps": 192
+      },
+      "High quality": {
+        "bitrate_kbps": 320
+      },
+      "Archival": {
+        "bitrate_kbps": 320
+      }
+    },
+    "video": {
+      "Web": {
+        "crf": 28,
+        "resolution": "720p",
+        "preset": "fast"
+      },
+      "Standard": {
+        "crf": 23,
+        "resolution": "1080p",
+        "preset": "medium"
+      },
+      "High quality": {
+        "crf": 18,
+        "resolution": "Original",
+        "preset": "slow"
+      },
+      "Social": {
+        "crf": 26,
+        "resolution": "720p",
+        "preset": "medium"
+      }
+    }
+  },
+  "defaults": {
+    "jpg": {
+      "quality": 85,
+      "progressive": true
+    },
+    "webp": {
+      "quality": 80
+    },
+    "avif": {
+      "quality": 60,
+      "speed": 6
+    },
+    "png": {
+      "compression": 6
+    },
+    "tiff": {
+      "compression": "none"
+    },
+    "gif": {
+      "width": 480,
+      "fps": 12,
+      "max_seconds": 15
+    },
+    "ico": {
+      "sizes": [
+        16,
+        32,
+        48,
+        64,
+        128,
+        256
+      ]
+    },
+    "pdf": {
+      "dpi": 150,
+      "page_range": null
+    },
+    "mp3": {
+      "bitrate_kbps": 192
+    },
+    "m4a": {
+      "bitrate_kbps": 192
+    },
+    "ogg": {
+      "quality": 5
+    },
+    "flac": {
+      "compression": 5
+    },
+    "wav": {
+      "bits": 16
+    },
+    "mp4": {
+      "crf": 23,
+      "preset": "medium",
+      "audio_bitrate_kbps": 128
+    },
+    "webm": {
+      "crf": 32,
+      "audio_bitrate_kbps": 96
+    },
+    "mkv": {
+      "crf": 23,
+      "preset": "medium",
+      "audio_bitrate_kbps": 128
+    },
+    "mov": {
+      "crf": 23,
+      "preset": "medium",
+      "audio_bitrate_kbps": 128
+    },
+    "svg": {
+      "trace_preset": "logo"
+    }
+  },
+  "samples": {},
+  "pair_count": 238,
+  "generated_from": "api/app/data/formats.json + api/app/catalog.py"
+}

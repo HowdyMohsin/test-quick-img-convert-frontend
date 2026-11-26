@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="40" viewBox="0 0 220 40" role="img" aria-label="Quick IMG Convert">
+  <rect x="1" y="3" width="34" height="34" rx="9" fill="#4F46E5"/>
+  <path d="M21 7 L12 21 h6 L17 33 L27 18 h-6 z" fill="#fff"/>
+  <text x="43" y="26" font-family="Arial, sans-serif" font-size="19" font-weight="800" fill="#0F172A">Quick IMG Convert</text>
+</svg>
