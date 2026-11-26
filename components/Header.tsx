@@ -158,8 +158,8 @@ export function Header({ me, loaded, onSignOut }: { me: MeResponse | null; loade
                 className="relative flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                 {(user.display_name || user.email || '?')[0].toUpperCase()}
                 {unread > 0 && (
-                  <span className="absolute -right-1 -top-1" aria-hidden>
-                    <Bell className="h-4 w-4 animate-bell-ring text-ink" strokeWidth={2.5} aria-hidden />
+                  <span className="absolute right-1.5 top-1.5" aria-hidden>
+                    <Bell className="h-4 w-4 animate-bell-ring text-white" strokeWidth={2.5} aria-hidden />
                   </span>
                 )}
               </button>

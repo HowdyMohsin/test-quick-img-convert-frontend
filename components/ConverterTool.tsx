@@ -1030,7 +1030,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                   {isImagePair && (f.file || f.uploadId) && (
                     <>
                       <button onClick={() => openPreview(f)} aria-label={`Preview ${displayName(f)}`} title="Preview"
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Eye className="h-5 w-5" /></button>
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Eye className="h-5 w-5" /></button>
                       <button onClick={() => openInEditor(f)} aria-label="Edit in image editor" title={editorAllowed ? 'Edit in image editor' : 'Image editor — Basic and Pro only'}
                         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{editorAllowed ? <Pencil className="h-5 w-5" /> : <Lock className="h-5 w-5" />}</button>
                     </>
@@ -1042,7 +1042,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                       className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X className="h-5 w-5" /></button>
                   ) : (
                     <button onClick={() => removeFile(f.id)} aria-label={`Remove ${displayName(f)}`} title="Remove"
-                      className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Trash2 className="h-5 w-5" /></button>
+                      className="flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-danger hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Trash2 className="h-5 w-5" /></button>
                   )}
                 </div>
                 {f.status === 'error' && (

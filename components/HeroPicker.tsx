@@ -258,8 +258,8 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
                   {f.status === 'error' && <p className="mt-0.5 text-xs text-danger">{f.error}</p>}
                 </div>
                 {f.status === 'ready' && <span className="shrink-0 rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-success">Ready</span>}
-                <button onClick={() => openStagedPreview(f)} aria-label={`Preview ${f.name}`} title="Preview" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Eye className="h-4 w-4" /></button>
-                <button onClick={() => removeStaged(f.id)} aria-label={`Remove ${f.name}`} title="Remove" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Trash2 className="h-4 w-4" /></button>
+                <button onClick={() => openStagedPreview(f)} aria-label={`Preview ${f.name}`} title="Preview" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Eye className="h-4 w-4" /></button>
+                <button onClick={() => removeStaged(f.id)} aria-label={`Remove ${f.name}`} title="Remove" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-danger hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Trash2 className="h-4 w-4" /></button>
               </li>
             ))}
           </ul>
@@ -272,7 +272,9 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
       <div className="grid items-end gap-3 sm:grid-cols-[1fr_auto_1fr_auto]">
         <Combobox id="hero-from" label="Convert from" placeholder="Choose a format…" options={fromOptions} value={from} onChange={onFrom} locked={fromLocked} />
         <div className="flex justify-center pb-1" aria-hidden="true">
-          <ArrowRight className="h-5 w-5 text-muted" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-soft text-muted">
+            <ArrowRight className="h-5 w-5" />
+          </span>
         </div>
         <Combobox id="hero-to" label="Convert to" placeholder={from ? 'Choose a format…' : 'Choose “from” first'} options={toOptions} value={to} onChange={setTo} disabled={!from} />
         <button type="button" onClick={() => router.push(pairUrl)} disabled={!from || !to}
@@ -284,7 +286,9 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
       <div className="grid items-end gap-4 sm:grid-cols-[1fr_auto_1fr]">
         <Combobox id="hero-from" label="Convert from" placeholder="Choose a format…" options={fromOptions} value={from} onChange={onFrom} locked={fromLocked} />
         <div className="flex justify-center pb-1" aria-hidden="true">
-          <ArrowRight className="h-5 w-5 text-muted" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-soft text-muted">
+            <ArrowRight className="h-5 w-5" />
+          </span>
         </div>
         <Combobox id="hero-to" label="Convert to" placeholder={from ? 'Choose a format…' : 'Choose “from” first'} options={toOptions} value={to} onChange={setTo} disabled={!from} />
       </div>
