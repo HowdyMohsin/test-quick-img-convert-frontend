@@ -132,6 +132,32 @@ export async function fetchMe(): Promise<MeResponse | null> {
   } catch { return null; }
 }
 
+// The header usage pill and the account page both read the session from
+// /v1/me. A conversion changes usage, so the converter tells the header
+// to re-fetch instead of the header showing yesterday's numbers.
+export const ME_REFRESH_EVENT = 'qic:me-refresh';
+export function notifyMeChanged() {
+  try { window.dispatchEvent(new Event(ME_REFRESH_EVENT)); } catch { /* ignore */ }
+}
+
+// GET /v1/notifications returns {notifications: [...], unread: N}. The
+// unread count in /v1/me and this list come from the same table, so they
+// can only disagree if one of the two fetches failed or went stale —
+// callers must take both values from this one response, never mix a
+// count from /v1/me with a list from a failed fetch.
+export async function fetchNotifications(): Promise<{ list: any[]; unread: number } | null> {
+  try {
+    const res = await fetch('/api/v1/notifications', { credentials: 'include' });
+    if (!res.ok) return null;
+    const d = await res.json();
+    const list = toArray(Array.isArray(d) ? d : d.notifications);
+    const unread = typeof d?.unread === 'number'
+      ? d.unread
+      : list.filter((n: any) => n && !n.read).length;
+    return { list, unread };
+  } catch { return null; }
+}
+
 export async function fetchSite(): Promise<any> {
   try {
     const res = await fetch('/api/v1/site', { credentials: 'include' });

@@ -2,7 +2,7 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { apiFetch, fetchMe, formatBytes, toArray, type MeResponse } from '@/lib/api';
+import { apiFetch, fetchMe, fetchNotifications, formatBytes, toArray, type MeResponse } from '@/lib/api';
 import { Badge, Button, Card, Input, Modal, PasswordField, Progress, Select, Switch, Tabs, Toast } from '@/components/ui';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
@@ -26,6 +26,9 @@ function AccountInner() {
   const [historyPage, setHistoryPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('all');
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [notificationsLoaded, setNotificationsLoaded] = useState(false);
+  const [notificationsError, setNotificationsError] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [sessions, setSessions] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [pendingReqs, setPendingReqs] = useState<any[]>([]);
@@ -61,13 +64,43 @@ function AccountInner() {
     // the page shows its friendly empty state — a non-array must never
     // reach a .map/.filter during render and crash the whole page.
     fetch('/api/v1/history?limit=50', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => { if (d) setHistory(toArray(Array.isArray(d) ? d : (d.jobs ?? d.history))); }).catch(() => {});
-    fetch('/api/v1/notifications', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => { if (d) setNotifications(toArray(Array.isArray(d) ? d : d.notifications)); }).catch(() => {});
+    // One fetch gives both the list and the count, so the tab label and
+    // the list can never disagree the way a /v1/me count mixed with a
+    // failed list fetch could. A failed fetch is reported as a load
+    // error, never as "no notifications".
+    fetchNotifications().then((res) => {
+      if (!res) { setNotificationsError(true); return; }
+      setNotifications(res.list);
+      setNotificationsLoaded(true);
+      setNotificationsError(false);
+    });
     fetch('/api/v1/auth/sessions', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => { if (d) setSessions(toArray(d.sessions)); }).catch(() => {});
     fetch('/api/v1/payments/history', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => { if (d) { setPayments(toArray(Array.isArray(d) ? d : d.payments)); setPendingReqs(toArray(d.requests).filter((x: any) => x && typeof x === 'object' && x.status === 'pending')); } }).catch(() => {});
   }, [me]);
 
+  // The list is fetched once when the account loads; if that fetch
+  // failed (backend asleep) the tab would wrongly say "no
+  // notifications" while the header still shows an unread count.
+  // Re-fetch when the tab opens so the list and the count agree.
+  useEffect(() => {
+    if (tab !== 'notifications') return;
+    fetchNotifications().then((res) => {
+      if (!res) { setNotificationsError(true); return; }
+      setNotifications(res.list);
+      setNotificationsLoaded(true);
+      setNotificationsError(false);
+    });
+  }, [tab]);
+
   const setTab = (t: string) => router.replace(`/account?tab=${t}`, { scroll: false });
   const user = me?.user;
+  // The unread count comes from the notifications list once it has
+  // loaded (the list endpoint returns the count from the same query as
+  // the list, so the two can never disagree). Until then, fall back to
+  // the /v1/me count — but never show a "(1)" next to an empty list.
+  const unreadCount = notificationsLoaded
+    ? notifications.filter((n: any) => n && !n.read).length
+    : (me?.unread_notifications || 0);
   const resetsIn = me?.usage?.resets_at ? Math.max(0, new Date(me.usage.resets_at).getTime() - Date.now()) : null;
   const resetsText = resetsIn == null ? '' : `${Math.floor(resetsIn / 3600000)}h ${Math.floor((resetsIn % 3600000) / 60000)}m`;
 
@@ -76,7 +109,7 @@ function AccountInner() {
     catch (e: any) { setToast(e?.message || 'Could not resend the email.'); }
   };
   const markAllRead = async () => {
-    try { await apiFetch('/v1/notifications/read-all', { method: 'POST' }); setNotifications((n) => n.map((x) => ({ ...x, read: true }))); setToast('All notifications marked as read.'); } catch { setToast('Could not update notifications.'); }
+    try { await apiFetch('/v1/notifications/read-all', { method: 'POST' }); setNotifications((n) => n.map((x) => ({ ...x, read: true }))); setMe((m) => (m ? { ...m, unread_notifications: 0 } : m)); setToast('All notifications marked as read.'); } catch { setToast('Could not update notifications.'); }
   };
   const changePassword = async () => {
     try { await apiFetch('/v1/auth/change-password', { method: 'POST', body: { current_password: currentPw, new_password: newPw } }); setCurrentPw(''); setNewPw(''); setToast('Password changed. All other sessions were signed out.'); }
@@ -117,7 +150,14 @@ function AccountInner() {
     catch (e: any) { setToast(e?.message || 'Could not cancel the subscription.'); }
   };
   const signOut = async () => {
-    try { await apiFetch('/v1/auth/logout', { method: 'POST' }); } catch { /* ignore */ }
+    if (signingOut) return;
+    setSigningOut(true);
+    // The free backend sleeps when idle: awaiting the logout call can
+    // take up to a minute, during which the first click looked dead.
+    // Fire it, but never make the user wait more than 5s — the local
+    // sign-out happens regardless.
+    const logout = apiFetch('/v1/auth/logout', { method: 'POST' }).catch(() => {});
+    await Promise.race([logout, new Promise((r) => setTimeout(r, 5000))]);
     router.push('/');
     router.refresh();
   };
@@ -146,13 +186,22 @@ function AccountInner() {
     inSize: historyNum(h.in_size),
     outSize: historyNum(h.out_size),
     created: historyDate(h.created_at),
+    expiresAt: typeof h.expires_at === 'string' ? h.expires_at : null,
   }));
   const totalPages = Math.max(1, Math.ceil(filteredHistory.length / pageSize));
+  // A download is expired only when the job finished AND its download
+  // window has passed. A job that is still queued must never say
+  // "Expired" — it has not even produced a download yet.
+  const downloadExpired = (r: { expiresAt: string | null }) => {
+    if (!r.expiresAt) return false;
+    const t = new Date(r.expiresAt).getTime();
+    return !Number.isNaN(t) && t < Date.now();
+  };
 
   return <div className="mx-auto max-w-7xl px-4 py-10">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h1 className="text-3xl font-extrabold text-ink">My account</h1>
-      <Button variant="secondary" onClick={signOut}>Sign out</Button>
+      <Button variant="secondary" onClick={signOut} loading={signingOut}>{signingOut ? 'Signing out…' : 'Sign out'}</Button>
     </div>
     {me?.grace_banner && <div className="mt-4 rounded-card border border-warn/40 bg-amber-50 p-4 text-sm"><p className="font-bold text-ink">Payment past due</p><p className="mt-1 text-muted">{me.grace_banner}</p></div>}
     <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
@@ -161,7 +210,7 @@ function AccountInner() {
           {TABS.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)} aria-current={tab === t.id ? 'page' : undefined}
               className={`min-h-[44px] whitespace-nowrap rounded-lg px-4 text-left text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${tab === t.id ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink'}`}>
-              {t.label}{t.id === 'notifications' && me?.unread_notifications ? ` (${me.unread_notifications})` : ''}
+              {t.label}{t.id === 'notifications' && unreadCount ? ` (${unreadCount})` : ''}
             </button>
           ))}
         </div>
@@ -190,10 +239,10 @@ function AccountInner() {
               <h3 className="font-bold text-ink">Last 5 conversions</h3>
               {history.length === 0 ? <p className="mt-2 text-sm text-muted">No conversions yet. Convert a file and it will show up here.</p> : (
                 <ul className="mt-2 space-y-1 text-sm">{history.slice(0, 5).map((h: any, i: number) => (
-                  <li key={typeof h.id === 'string' ? h.id : i} className="flex justify-between gap-2"><span className="text-muted">{historyText(h.pair_slug ?? h.pair)} · {historyText(h.status)}</span>{typeof h.id === 'string' && h.id && <a href={`/api/v1/jobs/${h.id}/download`} className="font-semibold text-primary">Re-download</a>}</li>
+                  <li key={typeof h.id === 'string' ? h.id : i} className="flex justify-between gap-2"><span className="text-muted">{historyText(h.pair_slug ?? h.pair)} · {historyText(h.status)}</span>{typeof h.id === 'string' && h.id && h.status === 'done' && <a href={`/api/v1/jobs/${h.id}/download`} className="font-semibold text-primary">Re-download</a>}</li>
                 ))}</ul>
               )}
-              <p className="mt-3 text-sm text-muted">Unread notifications: <strong className="text-ink">{me?.unread_notifications || 0}</strong></p>
+              <p className="mt-3 text-sm text-muted">Unread notifications: <strong className="text-ink">{unreadCount}</strong></p>
             </Card>
           </div>
         )}
@@ -217,7 +266,21 @@ function AccountInner() {
                         <td className="text-muted">{r.inSize != null ? formatBytes(r.inSize) : '—'}{r.outSize != null ? ` → ${formatBytes(r.outSize)}` : ''}</td>
                         <td className="text-muted">{r.inSize != null && r.inSize > 0 && r.outSize != null ? `${Math.round((1 - r.outSize / r.inSize) * 100)}%` : '—'}</td>
                         <td className="text-muted">{r.created}</td>
-                        <td>{r.id && r.status === 'done' ? <a href={`/api/v1/jobs/${r.id}/download`} className="font-semibold text-primary">Re-download</a> : <span className="text-muted">Expired</span>}</td>
+                        <td>
+                          {r.status === 'done' && r.id && !downloadExpired(r) ? (
+                            <a href={`/api/v1/jobs/${r.id}/download`} className="font-semibold text-primary">Re-download</a>
+                          ) : r.status === 'done' ? (
+                            <span className="text-muted">Expired</span>
+                          ) : r.status === 'queued' || r.status === 'running' || r.status === 'converting' ? (
+                            <span className="text-muted">Waiting…</span>
+                          ) : r.status === 'failed' ? (
+                            <span className="text-muted">Failed</span>
+                          ) : r.status === 'cancelled' ? (
+                            <span className="text-muted">Cancelled</span>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -282,7 +345,9 @@ function AccountInner() {
               <h3 className="font-bold text-ink">Notifications</h3>
               <Button variant="secondary" onClick={markAllRead}>Mark all read</Button>
             </div>
-            {notifications.length === 0 ? <p className="mt-3 text-sm text-muted">No notifications yet.</p> : (
+            {notificationsError && notifications.length === 0 ? (
+              <p className="mt-3 text-sm text-muted">Could not load your notifications — check your connection and try again.</p>
+            ) : notifications.length === 0 ? <p className="mt-3 text-sm text-muted">No notifications yet.</p> : (
               <ul className="mt-3 space-y-3">
                 {notifications.map((n: any, i: number) => (
                   <li key={n.id || i} className={`rounded-card border p-3 text-sm ${n.read ? 'border-line' : 'border-primary/40 bg-indigo-50/50'}`}>

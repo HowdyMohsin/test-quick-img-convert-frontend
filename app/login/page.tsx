@@ -37,7 +37,7 @@ function LoginInner() {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
 
-  useEffect(() => { setTab(mode); }, [mode]);
+  useEffect(() => { setTab(mode); setErrors({}); }, [mode]);
   useEffect(() => {
     fetchMe().then((m) => { if (m?.user) router.replace('/account'); });
     fetch('/api/v1/site', { credentials: 'include' })
@@ -59,6 +59,14 @@ function LoginInner() {
     delete next[field];
     return next;
   });
+
+  // Switching tabs must not carry the other form's error over: a failed
+  // "Email or password is incorrect." must never still be sitting on the
+  // registration form after the user switches tabs (and vice versa).
+  const switchTab = (v: string) => {
+    setTab(v);
+    setErrors({});
+  };
 
   // Validate one field only. Blur validates just the field that was left —
   // never the whole form, so tabbing through empty fields shows nothing.
@@ -214,7 +222,7 @@ function LoginInner() {
     <Card className="p-6 sm:p-8">
       <h1 className="text-center text-2xl font-extrabold text-ink">{tab === 'register' ? 'Create your account' : 'Welcome back'}</h1>
       <p className="mt-1 text-center text-sm text-muted">{tab === 'register' ? 'Free forever — 25 conversions a day.' : `Sign in to ${brand.name}.`}</p>
-      <div className="mt-6"><Tabs tabs={[{ id: 'signin', label: 'Sign in' }, { id: 'register', label: 'Create account' }]} value={tab} onChange={(v) => setTab(v)} /></div>
+      <div className="mt-6"><Tabs tabs={[{ id: 'signin', label: 'Sign in' }, { id: 'register', label: 'Create account' }]} value={tab} onChange={switchTab} /></div>
       {googleEnabled && <>
         <Button variant="secondary" className="mt-5 w-full" onClick={googleSignIn}>Continue with Google</Button>
         <div className="my-5 flex items-center gap-3 text-xs text-muted"><span className="h-px flex-1 bg-line" />or<span className="h-px flex-1 bg-line" /></div>

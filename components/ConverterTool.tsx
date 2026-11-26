@@ -1,13 +1,13 @@
 'use client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { apiFetch, formatBytes, friendlyErrorMessage, getCsrf, truncateMiddle } from '@/lib/api';
+import { apiFetch, formatBytes, friendlyErrorMessage, getCsrf, notifyMeChanged, toArray, truncateMiddle } from '@/lib/api';
 import type { FormatInfo, Catalog } from '@/lib/catalog';
 import { Button, Card, CompareSlider, EmptyState, FileThumb, Modal, Progress, Switch, Toast, Tooltip } from './ui';
 import { Check, Eye, Lock, Pencil, Upload, X } from 'lucide-react';
 import { AdFrame, MobileAnchorAd } from './AdFrame';
 import { HeroPicker, HOME_UPLOAD_HANDOFF_KEY, type HomeUploadHandoff, type HomeUploadHandoffPayload } from './HeroPicker';
 
-type FileStatus = 'ready' | 'uploading' | 'converting' | 'done' | 'error';
+type FileStatus = 'ready' | 'uploading' | 'converting' | 'waiting' | 'done' | 'error';
 interface ToolFile {
   id: string; file?: File; name: string; size: number; detected: string;
   status: FileStatus; progress: number; error?: string; hint?: string;
@@ -48,6 +48,14 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   const [showEditorModal, setShowEditorModal] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<Record<string, boolean>>({});
+  // The poll loop stops touching state once the tool unmounts (user
+  // navigates away while a job is still waiting) — the job itself keeps
+  // waiting on the server and shows up in the account history.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const batchLimit = 10;
   const remaining = usage ? Math.max(0, usage.limit - usage.used) : 5;
@@ -67,22 +75,27 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   useEffect(() => {
     fetch('/api/v1/history?limit=5', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d) setHistory(d.jobs || d.history || []); })
+      .then((d) => { if (d) setHistory(toArray(Array.isArray(d) ? d : (d.jobs ?? d.history))); })
       .catch(() => {});
   }, []);
 
   // Files staged on the home page were already uploaded there and handed
   // over through localStorage — show each as its own row here, with no
   // re-upload needed. Only files matching this converter are kept. The
-  // handoff is consumed once and cleared; a handoff older than 24 hours is
+  // handoff is deliberately NOT consumed destructively: going back from
+  // one pair page to another (or hitting the browser Back button)
+  // remounts this tool, and deleting the key on first read made the
+  // files vanish ("No files yet"). The key stays until the user clears
+  // the batch (or the home page writes a new one), so returning to a
+  // pair page restores the files; a handoff older than 24 hours is
   // dropped (uploads auto-delete after 24 hours on the server). A plain
   // array (the old sessionStorage shape) is still accepted.
-  const handoffDone = useRef(false);
+  const clearHandoff = () => {
+    try { localStorage.removeItem(HOME_UPLOAD_HANDOFF_KEY); } catch { /* ignore */ }
+  };
   useEffect(() => {
-    if (handoffDone.current) return;
-    handoffDone.current = true;
     let raw: string | null = null;
-    try { raw = localStorage.getItem(HOME_UPLOAD_HANDOFF_KEY); localStorage.removeItem(HOME_UPLOAD_HANDOFF_KEY); } catch { /* ignore */ }
+    try { raw = localStorage.getItem(HOME_UPLOAD_HANDOFF_KEY); } catch { /* ignore */ }
     if (!raw) return;
     let items: HomeUploadHandoff[] = [];
     try {
@@ -106,7 +119,14 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       status: 'ready', progress: 0, uploadId: it.uploadId,
       quality: 85, compress: 6, stripMeta: true, bitrate: '192', channels: 'Stereo', sampleRate: '44100', codec: 'H.264', crf: 23, resolution: 'Original',
     }));
-    setFiles((prev) => [...prev, ...mapped]);
+    // Dedup by upload id: the effect runs again when the user returns to
+    // this pair page, and the same files must never appear twice.
+    setFiles((prev) => {
+      const seen = new Set(prev.map((f) => f.uploadId).filter(Boolean));
+      const fresh = mapped.filter((f) => f.uploadId && !seen.has(f.uploadId));
+      if (!fresh.length) return prev;
+      return [...prev, ...fresh];
+    });
     setToast(`${matching.length} file${matching.length === 1 ? '' : 's'} added from the home page.`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -147,7 +167,13 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   }, [from, addFiles]);
 
   const updateFile = (id: string, patch: Partial<ToolFile>) => setFiles((fs) => fs.map((f) => (f.id === id ? { ...f, ...patch } : f)));
-  const removeFile = (id: string) => setFiles((fs) => fs.filter((f) => f.id !== id));
+  const removeFile = (id: string) => {
+    const next = files.filter((f) => f.id !== id);
+    setFiles(next);
+    // The batch is gone — drop the handoff so the files do not come back
+    // when the user returns to this pair page.
+    if (next.length === 0) clearHandoff();
+  };
 
   const openPreview = (tf: ToolFile) => {
     if (!isImagePair || !tf.file) return;
@@ -223,30 +249,75 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
       const job = await apiFetch<{ id: string; job_id?: string }>('/v1/convert', { method: 'POST', body: { upload_id: uploadId, to: to.slug, settings, batch_id: batchId } });
       const jobId = job.id || job.job_id || '';
       updateFile(tf.id, { jobId });
-      // Poll job status.
-      for (let i = 0; i < 120; i++) {
-        if (abortRef.current[tf.id]) return;
-        const res = await apiFetch<{ jobs?: any[] }>(`/v1/jobs?ids=${jobId}`);
-        const j = (res.jobs || [])[0];
-        if (!j) break;
+      // Poll job status. A job that is still queued or converting is NEVER
+      // a failure: on a backend with no worker (or a busy one) a job can
+      // sit queued indefinitely, so there is no fixed timeout that turns
+      // it into an error, and "try a smaller file" must never appear for
+      // a file that was never even attempted. After ~60s the row switches
+      // to an honest "waiting for the server" state and polling slows to
+      // every 5s; the user can cancel at any time. Only a terminal
+      // backend status, a lost job, or sustained loss of contact with the
+      // server ends the wait as an error.
+      let waitedMs = 0;
+      let pollFailures = 0;
+      let waitingShown = false;
+      for (;;) {
+        if (abortRef.current[tf.id] || !mountedRef.current) return;
+        let j: any = null;
+        try {
+          const res = await apiFetch<{ jobs?: any[] }>(`/v1/jobs?ids=${jobId}`);
+          j = (res.jobs || [])[0];
+          pollFailures = 0;
+        } catch {
+          // One failed poll (backend waking, deploy restart) must not
+          // fail the conversion — keep waiting; only sustained loss of
+          // contact becomes an error.
+          pollFailures += 1;
+          if (pollFailures >= 5) {
+            updateFile(tf.id, { status: 'error', error: 'Could not reach the server.', hint: 'Check your connection and try again.' });
+            return;
+          }
+          await new Promise((r) => setTimeout(r, 1500));
+          waitedMs += 1500;
+          continue;
+        }
+        if (!j) {
+          updateFile(tf.id, { status: 'error', error: 'We lost track of this conversion.', hint: 'Please try again.' });
+          return;
+        }
         if (j.status === 'done' || j.status === 'completed') {
           const outSize = j.out_size || 0;
           updateFile(tf.id, { status: 'done', progress: 100, outSize, savings: tf.size ? Math.round((1 - outSize / tf.size) * 100) : 0, downloadUrl: `/api/v1/jobs/${jobId}/download` });
           setDoneCount((c) => c + 1);
+          notifyMeChanged();
           return;
         }
         if (j.status === 'failed' || j.status === 'error') {
           updateFile(tf.id, { status: 'error', error: j.error_message || 'Conversion failed.', hint: 'Try the file again, or re-export it from the app that created it.' });
           return;
         }
-        updateFile(tf.id, { progress: 45 + Math.min(50, (j.progress || 0) / 2) });
-        await new Promise((r) => setTimeout(r, 1500));
+        if (j.status === 'cancelled') {
+          updateFile(tf.id, { status: 'error', error: 'This conversion was cancelled.', hint: 'Try again if you still need it.' });
+          return;
+        }
+        // Still queued / running: keep waiting.
+        const slow = waitedMs >= 60_000;
+        if (slow) {
+          if (!waitingShown) {
+            waitingShown = true;
+            updateFile(tf.id, { status: 'waiting', progress: 45 });
+          }
+        } else {
+          updateFile(tf.id, { progress: 45 + Math.min(50, (j.progress || 0) / 2) });
+        }
+        await new Promise((r) => setTimeout(r, slow ? 5000 : 1500));
+        waitedMs += slow ? 5000 : 1500;
       }
-      updateFile(tf.id, { status: 'error', error: 'Conversion timed out.', hint: 'Try again with a smaller file.' });
     } catch (e: any) {
       if (e?.code === 'quota_exceeded' || e?.status === 429) {
         setLimitHit(true);
         updateFile(tf.id, { status: 'error', error: 'Daily conversion limit reached.', hint: 'Upgrade your plan or come back tomorrow.' });
+        notifyMeChanged();
       } else {
         updateFile(tf.id, { status: 'error', error: friendlyErrorMessage(e, 'Something went wrong.'), hint: e?.hint || 'Check your connection and try again.' });
       }
@@ -275,7 +346,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   const cancelAll = () => {
     files.forEach((f) => { abortRef.current[f.id] = true; });
     setRunning(false);
-    setFiles((fs) => fs.map((f) => (f.status === 'uploading' || f.status === 'converting' ? { ...f, status: 'ready', progress: 0 } : f)));
+    setFiles((fs) => fs.map((f) => ((f.status === 'uploading' || f.status === 'converting' || f.status === 'waiting') ? { ...f, status: 'ready', progress: 0 } : f)));
   };
 
   const downloadAll = async () => {
@@ -321,6 +392,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
   const totalOut = files.filter((f) => f.status === 'done').reduce((a, f) => a + (f.outSize || 0), 0);
   const doneFiles = files.filter((f) => f.status === 'done').length;
   const failedFiles = files.filter((f) => f.status === 'error').length;
+  const waitingFiles = files.filter((f) => f.status === 'waiting').length;
   const thumbKind = from.category === 'Images' ? 'image' : from.category === 'Audio' ? 'audio' : from.category === 'Video' ? 'video' : from.slug === 'pdf' ? 'pdf' : 'file';
 
   if (disabledPair) {
@@ -354,7 +426,8 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-ink" title={f.name}>{truncateMiddle(f.name)}</p>
                     <p className="text-xs text-muted">{formatBytes(f.size)} · <span className="rounded bg-soft px-1.5 py-0.5 font-semibold">{f.detected}</span> → {to.label}</p>
-                    {(f.status === 'uploading' || f.status === 'converting') && <div className="mt-2"><Progress value={f.progress} label={f.status === 'uploading' ? 'Uploading' : 'Converting'} /></div>}
+                    {(f.status === 'uploading' || f.status === 'converting' || f.status === 'waiting') && <div className="mt-2"><Progress value={f.progress} label={f.status === 'uploading' ? 'Uploading' : f.status === 'waiting' ? 'Waiting for the server' : 'Converting'} /></div>}
+                    {f.status === 'waiting' && <p className="mt-1 text-xs text-muted">Your file is queued — it will convert when a worker is free.</p>}
                     {f.status === 'done' && <p className="mt-1 flex items-center text-xs font-semibold text-success"><Check className="mr-1 h-3.5 w-3.5" />Done · {formatBytes(f.outSize || 0)}{f.savings ? ` · ${f.savings > 0 ? `-${f.savings}%` : `+${-f.savings}%`}` : ''}</p>}
                     {f.status === 'error' && <p className="mt-1 text-xs text-danger">{f.error} {f.hint}</p>}
                   </div>
@@ -366,7 +439,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{editorAllowed ? <Pencil className="h-5 w-5" /> : <Lock className="h-5 w-5" />}</button>
                     </>
                   )}
-                  {f.status === 'uploading' || f.status === 'converting' ? (
+                  {f.status === 'uploading' || f.status === 'converting' || f.status === 'waiting' ? (
                     <button onClick={() => { abortRef.current[f.id] = true; updateFile(f.id, { status: 'ready', progress: 0 }); }} aria-label={`Cancel ${f.name}`}
                       className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X className="h-5 w-5" /></button>
                   ) : (
@@ -456,10 +529,13 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
             {running && <Button variant="secondary" onClick={cancelAll}>Cancel all</Button>}
             {doneFiles > 0 && <Button variant="secondary" onClick={downloadAll}>Download all (.zip)</Button>}
             {doneFiles > 0 && failedFiles === 0 && (
-              <Button variant="ghost" onClick={() => { setFiles([]); setDoneCount(0); }}>Convert another batch</Button>
+              <Button variant="ghost" onClick={() => { setFiles([]); setDoneCount(0); clearHandoff(); }}>Convert another batch</Button>
             )}
           </div>
-          {failedFiles > 0 && doneFiles === 0 && !running && (
+          {waitingFiles > 0 && (
+            <p className="mt-3 text-sm text-muted">Waiting for the server — your files are queued and will convert when a worker is free. You can keep this page open or come back later; finished conversions appear in your account history.</p>
+          )}
+          {failedFiles > 0 && doneFiles === 0 && waitingFiles === 0 && !running && failedFiles === files.length && (
             <div className="mt-3"><EmptyState title="All conversions failed" body="Check the error message on each file for a fix, then retry. Your settings are kept." /></div>
           )}
           {doneFiles > 0 && failedFiles > 0 && (
@@ -486,7 +562,7 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
             {history.map((h: any, i: number) => (
               <li key={h.id || i} className="flex items-center justify-between gap-2">
                 <span className="text-muted">{h.pair_slug || h.pair || ''} · {h.status || ''}</span>
-                {h.id && <a href={`/api/v1/jobs/${h.id}/download`} className="font-semibold text-primary">Re-download</a>}
+                {h.id && (h.status === 'done' || h.status === 'completed') && <a href={`/api/v1/jobs/${h.id}/download`} className="font-semibold text-primary">Re-download</a>}
               </li>
             ))}
           </ul>
