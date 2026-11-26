@@ -1,6 +1,33 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, ChevronDown, File, FileText, Image as ImageIcon, Music, Upload, Video, X } from 'lucide-react';
+
+// Shared body scroll lock with a counter: a Drawer and a Modal open at the
+// same time cannot unlock the page early when one of them closes. The
+// previous overflow value is restored instead of blindly clearing it.
+let bodyLockCount = 0;
+let bodyPrevOverflow = '';
+function lockBodyScroll() {
+  if (typeof document === 'undefined') return;
+  if (bodyLockCount === 0) {
+    bodyPrevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+  }
+  bodyLockCount += 1;
+}
+function unlockBodyScroll() {
+  if (typeof document === 'undefined') return;
+  bodyLockCount = Math.max(0, bodyLockCount - 1);
+  if (bodyLockCount === 0) document.body.style.overflow = bodyPrevOverflow;
+}
+function useBodyScrollLock(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    lockBodyScroll();
+    return () => unlockBodyScroll();
+  }, [active]);
+}
 
 // ---- Button ----
 export function Button({ children, variant = 'primary', loading, disabled, className = '', ...rest }:
@@ -85,6 +112,7 @@ export function Tabs({ tabs, value, onChange }: { tabs: { id: string; label: str
 // ---- Modal (focus trap) ----
 export function Modal({ open, onClose, title, children, labelledBy }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; labelledBy?: string }) {
   const ref = useRef<HTMLDivElement>(null);
+  useBodyScrollLock(open);
   useEffect(() => {
     if (!open) return;
     const el = ref.current; const prev = document.activeElement as HTMLElement;
@@ -101,8 +129,7 @@ export function Modal({ open, onClose, title, children, labelledBy }: { open: bo
       }
     };
     document.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; prev?.focus(); };
+    return () => { document.removeEventListener('keydown', onKey); prev?.focus(); };
   }, [open, onClose]);
   if (!open) return null;
   return <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/50 p-4 sm:items-center" role="dialog" aria-modal="true" aria-label={title} onClick={onClose}>
@@ -117,24 +144,37 @@ export function Modal({ open, onClose, title, children, labelledBy }: { open: bo
 }
 
 // ---- Drawer ----
+// Rendered through a portal to document.body: the bell lives inside the
+// sticky header, whose backdrop-blur makes it a containing block for
+// fixed-position descendants in Chrome — a drawer rendered inside it
+// would be positioned against the header instead of the viewport. The
+// portal keeps it a true viewport overlay on every screen size. Body
+// scroll is locked while open, so the page behind cannot scroll (or
+// shift sideways) under the drawer.
 export function Drawer({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  useBodyScrollLock(open);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [open, onClose]);
-  if (!open) return null;
-  return <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={title}>
-    <div className="absolute inset-0 bg-ink/50" onClick={onClose} />
-    <div className="absolute right-0 top-0 flex h-full w-full max-w-sm flex-col bg-surface shadow-card">
-      <div className="flex items-center justify-between border-b border-line px-5 py-4">
-        <h2 className="text-base font-bold text-ink">{title}</h2>
-        <button onClick={onClose} aria-label="Close panel" className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X className="h-5 w-5" /></button>
+  if (!open || !mounted) return null;
+  return createPortal(
+    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="absolute inset-0 bg-ink/50" onClick={onClose} />
+      <div className="absolute right-0 top-0 flex h-full w-full max-w-sm flex-col bg-surface shadow-card">
+        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+          <h2 className="text-base font-bold text-ink">{title}</h2>
+          <button onClick={onClose} aria-label="Close panel" className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
       </div>
-      <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
-    </div>
-  </div>;
+    </div>,
+    document.body,
+  );
 }
 
 // ---- Toast ----

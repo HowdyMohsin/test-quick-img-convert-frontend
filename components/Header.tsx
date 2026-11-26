@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { brand } from '@/lib/brand';
-import { apiFetch, fetchMe, type MeResponse } from '@/lib/api';
+import { apiFetch, fetchMe, toArray, type MeResponse } from '@/lib/api';
 import { Badge, Drawer, Button } from './ui';
 import { Bell, LogOut, X } from 'lucide-react';
 
@@ -32,7 +32,7 @@ export function Header({ me, onSignOut }: { me: MeResponse | null; onSignOut?: (
     setUnread(me?.unread_notifications || 0);
     fetch('/api/v1/notifications', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d) setNotifications((d.notifications || d || []).slice(0, 5)); })
+      .then((d) => { if (d) setNotifications(toArray(Array.isArray(d) ? d : d.notifications).slice(0, 5)); })
       .catch(() => {});
   }, [user, me?.unread_notifications]);
 

@@ -2,6 +2,15 @@
 // (rewritten to the backend); auth cookies are HttpOnly and never read in JS.
 export interface ApiError { code: string; message: string; hint?: string }
 
+// API list shapes are never trusted blindly: an error envelope, a wrapped
+// object, or a future backend change must never turn a list into a
+// non-array that crashes a .map/.filter during render. Anything that is
+// not a real array becomes an empty list (the page then shows its friendly
+// empty state instead of crashing).
+export function toArray<T>(v: unknown): T[] {
+  return Array.isArray(v) ? (v as T[]) : [];
+}
+
 // The user must NEVER see a raw technical error. Every message the UI shows
 // comes through friendlyErrorMessage: the backend's friendly message when it
 // has one, a mapped line for known error codes, and a generic line

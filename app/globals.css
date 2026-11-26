@@ -4,6 +4,15 @@
 
 :root { color-scheme: light; }
 html { scroll-behavior: smooth; }
+/* The page must never scroll sideways at any width: one element wider than
+   the viewport (an ad, a long unbroken string, a wide table) used to let
+   the whole page shift left on phones, which looked broken behind the
+   notifications drawer. `clip` (not `hidden`) does not create a scroll
+   container, so the sticky header keeps working. */
+html, body { overflow-x: hidden; }
+@supports (overflow-x: clip) {
+  html, body { overflow-x: clip; }
+}
 body { @apply bg-surface text-ink antialiased; font-family: var(--font-inter), system-ui, sans-serif; }
 ::selection { background: #4F46E5; color: #fff; }
 @media (prefers-reduced-motion: reduce) {

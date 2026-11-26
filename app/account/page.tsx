@@ -2,8 +2,9 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { apiFetch, fetchMe, formatBytes, type MeResponse } from '@/lib/api';
+import { apiFetch, fetchMe, formatBytes, toArray, type MeResponse } from '@/lib/api';
 import { Badge, Button, Card, Input, Modal, PasswordField, Progress, Select, Switch, Tabs, Toast } from '@/components/ui';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const TABS = [
   { id: 'overview', label: 'Overview' },
@@ -55,10 +56,14 @@ function AccountInner() {
   }, [resendCooldown]);
   useEffect(() => {
     if (!me) return;
-    fetch('/api/v1/history?limit=50', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => { if (d) setHistory(d.jobs || d.history || []); }).catch(() => {});
-    fetch('/api/v1/notifications', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => { if (d) setNotifications(d.notifications || d || []); }).catch(() => {});
-    fetch('/api/v1/auth/sessions', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => { if (d) setSessions(d.sessions || []); }).catch(() => {});
-    fetch('/api/v1/payments/history', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => { if (d) { setPayments(d.payments || d || []); setPendingReqs((d.requests || []).filter((x: any) => x.status === 'pending')); } }).catch(() => {});
+    // Every list is normalized to a real array first: if the API ever
+    // returns an error envelope or a wrapped object instead of a list,
+    // the page shows its friendly empty state — a non-array must never
+    // reach a .map/.filter during render and crash the whole page.
+    fetch('/api/v1/history?limit=50', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => { if (d) setHistory(toArray(Array.isArray(d) ? d : (d.jobs ?? d.history))); }).catch(() => {});
+    fetch('/api/v1/notifications', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => { if (d) setNotifications(toArray(Array.isArray(d) ? d : d.notifications)); }).catch(() => {});
+    fetch('/api/v1/auth/sessions', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => { if (d) setSessions(toArray(d.sessions)); }).catch(() => {});
+    fetch('/api/v1/payments/history', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => { if (d) { setPayments(toArray(Array.isArray(d) ? d : d.payments)); setPendingReqs(toArray(d.requests).filter((x: any) => x && typeof x === 'object' && x.status === 'pending')); } }).catch(() => {});
   }, [me]);
 
   const setTab = (t: string) => router.replace(`/account?tab=${t}`, { scroll: false });
@@ -120,9 +125,28 @@ function AccountInner() {
   if (loading) return <div className="mx-auto max-w-7xl px-4 py-10"><p className="text-muted">Loading your account…</p></div>;
   if (!user) return null;
 
-  const filteredHistory = history.filter((h) => statusFilter === 'all' || (h.status || '') === statusFilter);
+  // History rows are normalized before render: a null item, a field of
+  // the wrong type, or a bad date shows a dash — it can never throw while
+  // the table renders (rendering a non-string object as a React child, or
+  // dividing by a non-number size, used to be able to crash this tab).
+  const historyText = (v: unknown): string => (typeof v === 'string' && v ? v : typeof v === 'number' ? String(v) : '—');
+  const historyNum = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+  const historyDate = (v: unknown): string => {
+    if (typeof v !== 'string' && typeof v !== 'number') return '—';
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString();
+  };
+  const filteredHistory = history.filter((h) => h && typeof h === 'object' && (statusFilter === 'all' || (typeof h.status === 'string' ? h.status : '') === statusFilter));
   const pageSize = 10;
   const pageItems = filteredHistory.slice((historyPage - 1) * pageSize, historyPage * pageSize);
+  const pageRows = pageItems.map((h: any) => ({
+    id: typeof h.id === 'string' ? h.id : '',
+    pair: historyText(h.pair_slug ?? h.pair),
+    status: typeof h.status === 'string' ? h.status : '',
+    inSize: historyNum(h.in_size),
+    outSize: historyNum(h.out_size),
+    created: historyDate(h.created_at),
+  }));
   const totalPages = Math.max(1, Math.ceil(filteredHistory.length / pageSize));
 
   return <div className="mx-auto max-w-7xl px-4 py-10">
@@ -142,6 +166,7 @@ function AccountInner() {
           ))}
         </div>
       </div>
+      <ErrorBoundary key={tab}>
       <div>
         {tab === 'overview' && (
           <div className="space-y-4">
@@ -165,7 +190,7 @@ function AccountInner() {
               <h3 className="font-bold text-ink">Last 5 conversions</h3>
               {history.length === 0 ? <p className="mt-2 text-sm text-muted">No conversions yet. Convert a file and it will show up here.</p> : (
                 <ul className="mt-2 space-y-1 text-sm">{history.slice(0, 5).map((h: any, i: number) => (
-                  <li key={h.id || i} className="flex justify-between gap-2"><span className="text-muted">{h.pair_slug || h.pair} · {h.status}</span>{h.id && <a href={`/api/v1/jobs/${h.id}/download`} className="font-semibold text-primary">Re-download</a>}</li>
+                  <li key={typeof h.id === 'string' ? h.id : i} className="flex justify-between gap-2"><span className="text-muted">{historyText(h.pair_slug ?? h.pair)} · {historyText(h.status)}</span>{typeof h.id === 'string' && h.id && <a href={`/api/v1/jobs/${h.id}/download`} className="font-semibold text-primary">Re-download</a>}</li>
                 ))}</ul>
               )}
               <p className="mt-3 text-sm text-muted">Unread notifications: <strong className="text-ink">{me?.unread_notifications || 0}</strong></p>
@@ -180,19 +205,19 @@ function AccountInner() {
               </Select>
             </div>
             <p className="mt-2 text-xs text-muted">Conversions are kept for 90 days. Downloads expire 24 hours after conversion.</p>
-            {pageItems.length === 0 ? <p className="mt-4 text-sm text-muted">No conversions match. Try a different filter, or convert your first file.</p> : (
+            {pageRows.length === 0 ? <p className="mt-4 text-sm text-muted">No conversions match. Try a different filter, or convert your first file.</p> : (
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[640px] text-left text-sm">
                   <thead><tr className="border-b border-line text-muted"><th className="py-2">Conversion</th><th>Status</th><th>Size</th><th>Savings</th><th>Time</th><th></th></tr></thead>
                   <tbody>
-                    {pageItems.map((h: any, i: number) => (
-                      <tr key={h.id || i} className="border-b border-line">
-                        <td className="py-2.5 font-semibold text-ink">{h.pair_slug || h.pair || '—'}</td>
-                        <td><Badge tone={h.status === 'done' ? 'success' : h.status === 'failed' ? 'danger' : 'soft'}>{h.status || '—'}</Badge></td>
-                        <td className="text-muted">{h.in_size ? formatBytes(h.in_size) : '—'}{h.out_size ? ` → ${formatBytes(h.out_size)}` : ''}</td>
-                        <td className="text-muted">{h.in_size && h.out_size ? `${Math.round((1 - h.out_size / h.in_size) * 100)}%` : '—'}</td>
-                        <td className="text-muted">{h.created_at ? new Date(h.created_at).toLocaleString() : '—'}</td>
-                        <td>{h.id && h.status === 'done' ? <a href={`/api/v1/jobs/${h.id}/download`} className="font-semibold text-primary">Re-download</a> : <span className="text-muted">Expired</span>}</td>
+                    {pageRows.map((r, i) => (
+                      <tr key={r.id || i} className="border-b border-line">
+                        <td className="py-2.5 font-semibold text-ink">{r.pair}</td>
+                        <td><Badge tone={r.status === 'done' ? 'success' : r.status === 'failed' ? 'danger' : 'soft'}>{r.status || '—'}</Badge></td>
+                        <td className="text-muted">{r.inSize != null ? formatBytes(r.inSize) : '—'}{r.outSize != null ? ` → ${formatBytes(r.outSize)}` : ''}</td>
+                        <td className="text-muted">{r.inSize != null && r.inSize > 0 && r.outSize != null ? `${Math.round((1 - r.outSize / r.inSize) * 100)}%` : '—'}</td>
+                        <td className="text-muted">{r.created}</td>
+                        <td>{r.id && r.status === 'done' ? <a href={`/api/v1/jobs/${r.id}/download`} className="font-semibold text-primary">Re-download</a> : <span className="text-muted">Expired</span>}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -334,6 +359,7 @@ function AccountInner() {
           </div>
         )}
       </div>
+      </ErrorBoundary>
     </div>
     <Modal open={cancelConfirm} onClose={() => setCancelConfirm(false)} title="Cancel subscription?">
       <p className="text-sm text-muted">Your plan stays active until the end of the current period, then you move to the free plan.</p>
