@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { brand } from '@/lib/brand';
 import { apiFetch, fetchMe, fetchNotifications, ME_REFRESH_EVENT, type MeResponse } from '@/lib/api';
 import { Badge, Container, Drawer, Button } from './ui';
-import { Bell, X } from 'lucide-react';
+import { ArrowLeftRight, Bell, CreditCard, LogOut, User, X } from 'lucide-react';
 
 export function useMe() {
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -48,6 +48,18 @@ export function useMe() {
 
 export function Header({ me, loaded, onSignOut }: { me: MeResponse | null; loaded: boolean; onSignOut?: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  // Clicking anywhere outside the profile dropdown (or the avatar
+  // button) closes it. The avatar button itself toggles via onClick;
+  // the mousedown listener only fires for clicks outside the wrapper.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [menuOpen]);
   const [bellOpen, setBellOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [notificationsLoaded, setNotificationsLoaded] = useState(false);
@@ -123,10 +135,10 @@ export function Header({ me, loaded, onSignOut }: { me: MeResponse | null; loade
       </nav>
       <div className="ml-auto flex items-center gap-2">
         {user && me?.usage && (
-          <Link href="/account?tab=overview" aria-label={`Usage: ${me.usage.used} of ${me.usage.limit} conversions today`}
-            className="hidden rounded-full bg-soft px-3 py-1.5 text-xs font-semibold text-ink hover:bg-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:inline-flex">
+          <span title={`Usage: ${me.usage.used} of ${me.usage.limit} conversions today`}
+            className="hidden rounded-full bg-soft px-3 py-1.5 text-xs font-semibold text-ink sm:inline-flex">
             {me.usage.used}/{me.usage.limit} today
-          </Link>
+          </span>
         )}
         {!loaded ? (
           // The session is not known yet (fresh tab, backend waking).
@@ -140,10 +152,10 @@ export function Header({ me, loaded, onSignOut }: { me: MeResponse | null; loade
           </>
         ) : (
           <>
-            <div className="relative">
+            <div className="relative" ref={menuRef}>
               <button onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-haspopup="menu"
                 aria-label={unread > 0 ? `Account menu, ${unread} unread notification${unread === 1 ? '' : 's'}` : 'Account menu'}
-                className="relative flex h-11 w-11 items-center justify-center rounded-full bg-primary text-sm font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                className="relative flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                 {(user.display_name || user.email || '?')[0].toUpperCase()}
                 {unread > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-danger px-1 text-[10px] font-bold text-white shadow" aria-hidden>
@@ -155,16 +167,23 @@ export function Header({ me, loaded, onSignOut }: { me: MeResponse | null; loade
               {menuOpen && (
                 <div role="menu" className="absolute right-0 mt-2 w-56 rounded-card-lg border border-line bg-surface py-1 shadow-card">
                   <div className="border-b border-line px-4 py-2.5">
-                    <p className="truncate text-sm font-bold text-ink">{user.display_name || user.email}</p>
+                    <p className="flex items-center gap-2 text-sm font-bold text-ink">
+                      <span className="min-w-0 truncate">{user.display_name || user.email}</span>
+                      {/* The plan comes from the signed-in user's own
+                          session (/v1/me user.plan) — never hard-coded,
+                          so it shows whichever plan the user has,
+                          including an admin-created plan they bought. */}
+                      <span className="shrink-0 rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-bold text-primary">{(user.plan || 'free').split(/[-_]+/).filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</span>
+                    </p>
                     <p className="truncate text-xs text-muted">{user.email}</p>
                   </div>
                   {[
-                    { href: '/account?tab=overview', label: 'Account' },
-                    { href: '/account?tab=conversions', label: 'Conversions' },
-                    { href: '/account?tab=plan', label: 'Plan and billing' },
+                    { href: '/account?tab=overview', label: 'Account', Icon: User },
+                    { href: '/account?tab=conversions', label: 'Conversions', Icon: ArrowLeftRight },
+                    { href: '/account?tab=plan', label: 'Plan and billing', Icon: CreditCard },
                   ].map((l) => (
                     <Link key={l.href} role="menuitem" href={l.href} onClick={() => setMenuOpen(false)}
-                      className="block px-4 py-2.5 text-sm text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary">{l.label}</Link>
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"><l.Icon className="h-4 w-4 shrink-0 text-muted" aria-hidden />{l.label}</Link>
                   ))}
                   {/* Notifications live here now, not as a separate header
                       bell: opening this item shows the same drawer. */}
@@ -174,7 +193,7 @@ export function Header({ me, loaded, onSignOut }: { me: MeResponse | null; loade
                     Notifications
                     {unread > 0 && <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold text-white">{unread}</span>}
                   </button>
-                  <button role="menuitem" onClick={signOut} disabled={signingOut} className="block w-full px-4 py-2.5 text-left text-sm text-danger hover:bg-soft disabled:opacity-50">{signingOut ? 'Signing out…' : 'Sign out'}</button>
+                  <button role="menuitem" onClick={signOut} disabled={signingOut} className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-danger hover:bg-soft disabled:opacity-50"><LogOut className="h-4 w-4 shrink-0" aria-hidden />{signingOut ? 'Signing out…' : 'Sign out'}</button>
                 </div>
               )}
             </div>

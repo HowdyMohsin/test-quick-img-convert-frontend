@@ -1041,8 +1041,8 @@ export function ConverterTool({ from, to, catalog, usage, disabledPair }: { from
                     <button onClick={() => { abortRef.current[f.id] = true; try { xhrRef.current[f.id]?.abort(); } catch { /* ignore */ } clearWakingTimer(f.id); updateFile(f.id, { status: 'ready', progress: 0, waking: false }); }} aria-label={`Cancel ${displayName(f)}`}
                       className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X className="h-5 w-5" /></button>
                   ) : (
-                    <button onClick={() => removeFile(f.id)} aria-label={`Remove ${displayName(f)}`}
-                      className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X className="h-5 w-5" /></button>
+                    <button onClick={() => removeFile(f.id)} aria-label={`Remove ${displayName(f)}`} title="Remove"
+                      className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Trash2 className="h-5 w-5" /></button>
                   )}
                 </div>
                 {f.status === 'error' && (

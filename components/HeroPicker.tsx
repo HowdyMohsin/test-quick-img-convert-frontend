@@ -1,10 +1,10 @@
 'use client';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftRight, Upload, X } from 'lucide-react';
+import { ArrowRight, Eye, Trash2, Upload } from 'lucide-react';
 import { Combobox, formatOptions } from './Combobox';
 import { CategoryBar } from './CategoryBar';
-import { FileThumb } from './ui';
+import { FileThumb, Modal } from './ui';
 import type { Catalog } from '@/lib/catalog';
 import { apiFetch, formatBytes, friendlyErrorMessage } from '@/lib/api';
 
@@ -28,7 +28,7 @@ export const HOME_UPLOAD_HANDOFF_KEY = 'qic-home-uploads';
 export interface HomeUploadHandoff { uploadId: string; name: string; size: number; detected: string }
 export interface HomeUploadHandoffPayload { ts: number; items: HomeUploadHandoff[] }
 
-interface StagedFile { id: string; name: string; size: number; detected: string; status: 'uploading' | 'ready' | 'error'; error?: string; uploadId?: string }
+interface StagedFile { id: string; name: string; size: number; detected: string; status: 'uploading' | 'ready' | 'error'; error?: string; uploadId?: string; file?: File }
 
 function thumbKindFor(catalog: Catalog, slug: string): 'image' | 'audio' | 'video' | 'pdf' | 'file' {
   const f = catalog.formats.find((x) => x.slug === slug);
@@ -52,6 +52,21 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
   const [dragOver, setDragOver] = useState(false);
   const [staged, setStaged] = useState<StagedFile[]>([]);
   const detectInputRef = useRef<HTMLInputElement>(null);
+  // File preview (eye icon on a staged row): the local file blob is kept
+  // on the staged item, so the preview opens from it directly — the same
+  // dialog pattern the pair page uses. Non-image files show a short note.
+  const [preview, setPreview] = useState<{ url: string; name: string; isImage: boolean } | null>(null);
+  const openStagedPreview = (f: StagedFile) => {
+    if (f.file && f.file.type.startsWith('image/')) {
+      setPreview({ url: URL.createObjectURL(f.file), name: f.name, isImage: true });
+    } else {
+      setPreview({ url: '', name: f.name, isImage: false });
+    }
+  };
+  const closePreview = () => {
+    if (preview?.url) URL.revokeObjectURL(preview.url);
+    setPreview(null);
+  };
 
   // Extensions the catalog can actually convert. A format counts only if
   // it has at least one target — built from the catalog, never hard-coded.
@@ -99,8 +114,8 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
     const toCat = to ? catalog.formats.find((f) => f.slug === to)?.category : null;
     if (to && toCat !== c) setTo(null);
   };
-  const reverseExists = from && to ? (catalog.targetsByInput[to] || []).includes(from) : false;
-  const swap = () => { if (reverseExists && from && to) { setFrom(to); setTo(from); } };
+  // No swap button any more (user order 2026-11-26): the arrow between
+  // the dropdowns is a static direction indicator, not a control.
 
   const fromLabel = catalog.formats.find((f) => f.slug === from)?.label;
   const toLabel = catalog.formats.find((f) => f.slug === to)?.label;
@@ -142,9 +157,9 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
     incoming.forEach((f, i) => {
       const id = `${now}-${i}-${f.name}`;
       if (!supportedExts.has(fileExt(f.name))) {
-        stagedItems.push({ id, name: f.name, size: f.size, detected: '', status: 'error', error: UNSUPPORTED_FILE_MESSAGE });
+        stagedItems.push({ id, name: f.name, size: f.size, detected: '', status: 'error', error: UNSUPPORTED_FILE_MESSAGE, file: f });
       } else {
-        const item: StagedFile = { id, name: f.name, size: f.size, detected: '', status: 'uploading' };
+        const item: StagedFile = { id, name: f.name, size: f.size, detected: '', status: 'uploading', file: f };
         stagedItems.push(item);
         toUpload.push({ item, file: f });
       }
@@ -211,7 +226,8 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
   return <div className="rounded-card-xl border border-line bg-surface p-5 shadow-card sm:p-6">
     {layout === 'default' && (
       <div className="mb-5">
-        <CategoryBar value={catFilter} onChange={onCategory} disabled={fromLocked} />
+        <CategoryBar value={catFilter} onChange={onCategory} disabled={fromLocked}
+          search={{ formats: catalog.formats.filter((f) => catalog.targetsByInput[f.slug]?.length), onSelect: (slug) => onFrom(slug) }} />
         {catFilter !== 'All' && <p className="mt-2 text-xs text-muted">Showing {catFilter} formats — pick “All” to see every format.</p>}
       </div>
     )}
@@ -224,7 +240,7 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={(e) => { e.preventDefault(); setDragOver(false); void uploadFiles(Array.from(e.dataTransfer.files || [])); }}
-          className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-card border-2 border-dashed px-4 py-5 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${dragOver ? 'border-primary bg-indigo-50' : 'border-line bg-soft/40 hover:border-primary/50'}`}>
+          className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-card border-2 border-dashed px-4 py-16 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:py-20 ${dragOver ? 'border-primary bg-indigo-50' : 'border-line bg-soft/40 hover:border-primary/50'}`}>
           <Upload className="h-7 w-7 text-muted" aria-hidden />
           <p className="text-sm font-bold text-ink">{catFilter === 'All' ? 'Drop files here to detect their format' : `Drop ${catFilter} files here to detect their format`}</p>
           <p className="text-xs text-muted">You can drop several files at once — or <span className="font-semibold text-primary underline">browse your files</span></p>
@@ -242,7 +258,8 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
                   {f.status === 'error' && <p className="mt-0.5 text-xs text-danger">{f.error}</p>}
                 </div>
                 {f.status === 'ready' && <span className="shrink-0 rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-success">Ready</span>}
-                <button onClick={() => removeStaged(f.id)} aria-label={`Remove ${f.name}`} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><X className="h-4 w-4" /></button>
+                <button onClick={() => openStagedPreview(f)} aria-label={`Preview ${f.name}`} title="Preview" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Eye className="h-4 w-4" /></button>
+                <button onClick={() => removeStaged(f.id)} aria-label={`Remove ${f.name}`} title="Remove" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><Trash2 className="h-4 w-4" /></button>
               </li>
             ))}
           </ul>
@@ -254,11 +271,8 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
     {layout === 'bar' ? (
       <div className="grid items-end gap-3 sm:grid-cols-[1fr_auto_1fr_auto]">
         <Combobox id="hero-from" label="Convert from" placeholder="Choose a format…" options={fromOptions} value={from} onChange={onFrom} locked={fromLocked} />
-        <div className="flex justify-center pb-1">
-          <button type="button" onClick={swap} disabled={!reverseExists} aria-label="Swap formats" title={reverseExists ? 'Swap formats' : 'Reverse conversion is not available'}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40">
-            <ArrowLeftRight className="h-5 w-5" />
-          </button>
+        <div className="flex justify-center pb-1" aria-hidden="true">
+          <ArrowRight className="h-5 w-5 text-muted" />
         </div>
         <Combobox id="hero-to" label="Convert to" placeholder={from ? 'Choose a format…' : 'Choose “from” first'} options={toOptions} value={to} onChange={setTo} disabled={!from} />
         <button type="button" onClick={() => router.push(pairUrl)} disabled={!from || !to}
@@ -269,11 +283,8 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
     ) : (
       <div className="grid items-end gap-4 sm:grid-cols-[1fr_auto_1fr]">
         <Combobox id="hero-from" label="Convert from" placeholder="Choose a format…" options={fromOptions} value={from} onChange={onFrom} locked={fromLocked} />
-        <div className="flex justify-center pb-1">
-          <button type="button" onClick={swap} disabled={!reverseExists} aria-label="Swap formats" title={reverseExists ? 'Swap formats' : 'Reverse conversion is not available'}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-ink hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40">
-            <ArrowLeftRight className="h-5 w-5" />
-          </button>
+        <div className="flex justify-center pb-1" aria-hidden="true">
+          <ArrowRight className="h-5 w-5 text-muted" />
         </div>
         <Combobox id="hero-to" label="Convert to" placeholder={from ? 'Choose a format…' : 'Choose “from” first'} options={toOptions} value={to} onChange={setTo} disabled={!from} />
       </div>
@@ -300,5 +311,14 @@ export function HeroPicker({ catalog, showUploadBox = false, layout = 'default',
     </div>
     )}
     {layout === 'default' && <p className="mt-3 text-center text-xs text-muted">Files auto-delete after 24 hours</p>}
+    {preview && (
+      <Modal open={!!preview} onClose={closePreview} title={preview.name}>
+        {preview.isImage ? (
+          <img src={preview.url} alt={`Preview of ${preview.name}`} className="max-h-[70vh] w-full rounded-card object-contain" />
+        ) : (
+          <p className="text-sm text-muted">Preview is available for image files.</p>
+        )}
+      </Modal>
+    )}
   </div>;
 }
